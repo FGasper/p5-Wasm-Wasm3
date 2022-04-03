@@ -8,10 +8,15 @@ use Test::FailWarnings;
 
 use Wasm::Wasm3::Environment ();
 
-my $env = Wasm::Wasm3::Environment->new();
+{
+    my $env = Wasm::Wasm3::Environment->new();
 
-isa_ok($env, 'Wasm::Wasm3::Environment', 'new() result');
+    isa_ok($env, 'Wasm::Wasm3::Environment', 'new() result');
+}
 
-undef $env;
+{
+    my $rt = Wasm::Wasm3::Environment->new()->create_runtime(1234);
+    isa_ok($rt, 'Wasm::Wasm3::Runtime', 'create_runtime() result');
+}
 
 done_testing;
