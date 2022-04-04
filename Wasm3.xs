@@ -155,31 +155,38 @@ call_function (SV* self_sv, SV* name_sv, ...)
         if (res) croak("%s(): %s", name, res);
 
         void* retptrs[returns_count];
+        uint64_t retvals[returns_count];
+        for (unsigned r=0; r<returns_count; r++) {
+            retvals[r] = 0;
+            retptrs[r] = &retvals[r];
+        }
+
         res = m3_GetResults( o_function, returns_count, (const void **) retptrs );
         if (res) croak("%s (m3_GetResults): %s", name, res);
 
         EXTEND(SP, returns_count);
         for (unsigned r=0; r<returns_count; r++) {
             SV* newret;
+            void* retval_ptr = retvals + r;
 
             switch (m3_GetRetType(o_function, r)) {
                 case c_m3Type_none:
                     croak("%s: Return #%u’s type is unknown!", name, 1 + r);
 
                 case c_m3Type_i32:
-                    newret = newSViv( *( (int32_t*) retptrs[r] ) );
+                    newret = newSViv( *( (int32_t*) retval_ptr ) );
                     break;
 
                 case c_m3Type_i64:
-                    newret = newSViv( *( (int64_t*) retptrs[r] ) );
+                    newret = newSViv( *( (int64_t*) retval_ptr ) );
                     break;
 
                 case c_m3Type_f32:
-                    newret = newSVnv( *( (float*) retptrs[r] ) );
+                    newret = newSVnv( *( (float*) retval_ptr ) );
                     break;
 
                 case c_m3Type_f64:
-                    newret = newSVnv( *( (double*) retptrs[r] ) );
+                    newret = newSVnv( *( (double*) retval_ptr ) );
                     break;
 
                 default:
@@ -188,6 +195,8 @@ call_function (SV* self_sv, SV* name_sv, ...)
 
             mPUSHs(newret);
         }
+
+        XSRETURN(returns_count);
 
 SV*
 load_module (SV* self_sv, SV* module_sv)
