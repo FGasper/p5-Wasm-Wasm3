@@ -235,6 +235,12 @@ MODULE = Wasm::Wasm3        PACKAGE = Wasm::Wasm3
 
 PROTOTYPES: DISABLE
 
+BOOT:
+    newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_I32", newSVuv(c_m3Type_i32));
+    newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_I64", newSVuv(c_m3Type_i64));
+    newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_F32", newSVuv(c_m3Type_f32));
+    newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_F64", newSVuv(c_m3Type_f64));
+
 void
 m3_version ()
     PPCODE:

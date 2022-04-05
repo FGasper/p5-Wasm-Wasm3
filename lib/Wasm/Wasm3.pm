@@ -51,7 +51,7 @@ XSLoader::load( __PACKAGE__, $VERSION );
 
 #----------------------------------------------------------------------
 
-=head1 STATIC FUNCTIONS
+=head1 STATIC FUNCTIONS & CONSTANTS
 
 =head2 ($MAJOR, $MINOR, $REV) = m3_version()
 
@@ -60,6 +60,10 @@ Returns wasm3’s version as 3 integers.
 =head2 $STRING = m3_version_string()
 
 Returns wasm3’s version as a string.
+
+=head2 C<TYPE_I32>, C<TYPE_I64>, C<TYPE_F32>, C<TYPE_F64>
+
+Numeric constants that indicate the corresponding WebAssembly type.
 
 =head1 METHODS
 
