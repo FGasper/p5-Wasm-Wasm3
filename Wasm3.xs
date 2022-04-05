@@ -176,7 +176,6 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
         SV** p = ret_svs;
         while (*p++) got_count++;
     }
-    fprintf(stderr, "cb gave: %d\n", got_count);
 
     const char* errstr = NULL;
 
@@ -189,7 +188,6 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
 
     if (ret_svs) {
         while (got_count--) SvREFCNT_dec(ret_svs[got_count]);
-        Safefree(ret_svs);
     }
 
     if (errstr) m3ApiTrap(errstr);
