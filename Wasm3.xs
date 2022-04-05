@@ -209,7 +209,7 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
 #define _WW3_CROAK_IF_NO_MODULE_LOADED(rt_sp) \
     if (!rt_sp->any_modules_linked) croak("Load a module first.")
 
-#define _function_sig_xsub(self_sv, name_sv, arg_counter, arg_getter) STMT_START {   \
+#define _function_sig_xsub(self_sv, name_sv, counter, getter) STMT_START {   \
     ww3_runtime_s* rt_sp = exs_structref_ptr(self_sv);      \
                                                             \
     const char* name = exs_SvPVutf8_nolen(name_sv);         \
@@ -218,15 +218,15 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
     M3Result res = m3_FindFunction( &o_function, rt_sp->rt, name ); \
     if (res) croak("Failed to find function %s: %s", name, res);    \
                                                             \
-    uint32_t args_count = arg_counter(o_function);       \
+    uint32_t count = counter(o_function);       \
                                                             \
-    EXTEND(SP, args_count);                                 \
+    EXTEND(SP, count);                                 \
                                                             \
-    for (unsigned a=0; a<args_count; a++) {                 \
-        mPUSHu( arg_getter(o_function, a) );             \
+    for (unsigned a=0; a<count; a++) {                 \
+        mPUSHu( getter(o_function, a) );             \
     }                                                       \
                                                             \
-    XSRETURN(args_count);                                   \
+    XSRETURN(count);                                   \
 } STMT_END
 
 /* ---------------------------------------------------------------------- */
