@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <inttypes.h>
+#include <stdbool.h>
 
 #define PERL_NS "Wasm::Wasm3"
 #define PERL_RT_CLASS (PERL_NS "::Runtime")
@@ -21,6 +22,7 @@ typedef struct {
 typedef struct {
     IM3Runtime rt;
     pid_t pid;
+    bool any_modules_linked;
 
     /* Only one of these gets set: */
     SV* env_sv;
@@ -204,6 +206,29 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
     m3ApiSuccess();
 }
 
+#define _WW3_CROAK_IF_NO_MODULE_LOADED(rt_sp) \
+    if (!rt_sp->any_modules_linked) croak("Load a module first.")
+
+#define _function_sig_xsub(self_sv, name_sv, arg_counter, arg_getter) STMT_START {   \
+    ww3_runtime_s* rt_sp = exs_structref_ptr(self_sv);      \
+                                                            \
+    const char* name = exs_SvPVutf8_nolen(name_sv);         \
+                                                            \
+    IM3Function o_function;                                 \
+    M3Result res = m3_FindFunction( &o_function, rt_sp->rt, name ); \
+    if (res) croak("Failed to find function %s: %s", name, res);    \
+                                                            \
+    uint32_t args_count = arg_counter(o_function);       \
+                                                            \
+    EXTEND(SP, args_count);                                 \
+                                                            \
+    for (unsigned a=0; a<args_count; a++) {                 \
+        mPUSHu( arg_getter(o_function, a) );             \
+    }                                                       \
+                                                            \
+    XSRETURN(args_count);                                   \
+} STMT_END
+
 /* ---------------------------------------------------------------------- */
 
 MODULE = Wasm::Wasm3        PACKAGE = Wasm::Wasm3
@@ -304,6 +329,17 @@ new (const char* classname, SV* stacksize_sv)
         RETVAL
 
 void
+get_function_arguments (SV* self_sv, SV* name_sv)
+    PPCODE:
+        _function_sig_xsub(self_sv, name_sv, m3_GetArgCount, m3_GetArgType);
+
+
+void
+get_function_returns (SV* self_sv, SV* name_sv)
+    PPCODE:
+        _function_sig_xsub(self_sv, name_sv, m3_GetRetCount, m3_GetRetType);
+
+void
 call (SV* self_sv, SV* name_sv, ...)
     PPCODE:
         ww3_runtime_s* rt_sp = exs_structref_ptr(self_sv);
@@ -385,21 +421,24 @@ load_module (SV* self_sv, SV* module_sv)
 
         if (res) croak("%s", res);
 
-        /* m3_LoadModule transfers ownership of the module, so we ...
-        */
+        /* m3_LoadModule transfers ownership of the module. */
+        Safefree(mod_sp->bytes);
         mod_sp->bytes = NULL;
+
+        rt_sp->any_modules_linked = true;
 
         RETVAL = SvREFCNT_inc(self_sv);
     OUTPUT:
         RETVAL
 
 SV*
-get_memory (SV* self_sv, SV* offset_sv, SV* wantlen_sv)
+get_memory (SV* self_sv, SV* offset_sv=NULL, SV* wantlen_sv=NULL)
     CODE:
-        UV offset = exs_SvUV(offset_sv);
-        UV wantlen = exs_SvUV(wantlen_sv);
+        UV offset = (offset_sv && SvOK(offset_sv)) ? exs_SvUV(offset_sv) : 0;
 
         ww3_runtime_s* rt_sp = exs_structref_ptr(self_sv);
+
+        _WW3_CROAK_IF_NO_MODULE_LOADED(rt_sp);
 
         uint32_t memsize;
         uint8_t* mem = m3_GetMemory(rt_sp->rt, &memsize, 0);
@@ -407,6 +446,8 @@ get_memory (SV* self_sv, SV* offset_sv, SV* wantlen_sv)
         if (offset > memsize) {
             croak("offset (%" UVf ") exceeds memory size (%" PRIu32 ")", offset, memsize);
         }
+
+        UV wantlen = (wantlen_sv && SvOK(wantlen_sv)) ? exs_SvUV(wantlen_sv) : (memsize - offset);
 
         if (wantlen > (memsize - offset)) {
             wantlen = (memsize - offset);
@@ -417,10 +458,37 @@ get_memory (SV* self_sv, SV* offset_sv, SV* wantlen_sv)
     OUTPUT:
         RETVAL
 
+SV*
+set_memory (SV* self_sv, SV* offset_sv, SV* new_content)
+    CODE:
+        UV offset = exs_SvUV(offset_sv);
+        STRLEN newlen;
+        const uint8_t* newbytes = (uint8_t*) SvPVbyte(new_content, newlen);
+
+        ww3_runtime_s* rt_sp = exs_structref_ptr(self_sv);
+
+        _WW3_CROAK_IF_NO_MODULE_LOADED(rt_sp);
+
+        uint32_t memsize;
+        uint8_t* mem = m3_GetMemory(rt_sp->rt, &memsize, 0);
+
+        if ((newlen + offset) > memsize) {
+            croak("Memory overflow: offset %" UVf " + length %zu = %" UVf ", exceeds %" PRIu32, offset, newlen, offset + newlen, memsize);
+        }
+
+        Copy(newbytes, mem + offset, newlen, uint8_t);
+
+        RETVAL = SvREFCNT_inc(self_sv);
+
+    OUTPUT:
+        RETVAL
+
 UV
 get_memory_size (SV* self_sv)
     CODE:
         ww3_runtime_s* rt_sp = exs_structref_ptr(self_sv);
+
+        _WW3_CROAK_IF_NO_MODULE_LOADED(rt_sp);
 
         uint32_t memsize = 0;
         m3_GetMemory(rt_sp->rt, &memsize, 0);
