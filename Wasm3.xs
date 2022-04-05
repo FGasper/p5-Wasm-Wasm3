@@ -13,6 +13,11 @@
 #define MAX_UINT32 0xffffffff
 #define MAX_MEMSIZE MAX_UINT32
 
+#define _warn_if_global_destruct(self_sv, the_struct) \
+    if (PL_dirty && the_struct->pid == getpid()) { \
+        warn("%" SVf " destroyed at global destruction; memory leak likely!", self_sv); \
+    }
+
 typedef struct {
     IM3Environment env;
     pid_t pid;
@@ -308,9 +313,7 @@ DESTROY (SV* self_sv)
     CODE:
         ww3_environ_s* env_sp = exs_structref_ptr(self_sv);
 
-        if (PL_dirty && env_sp->pid == getpid()) {
-            warn("%" SVf " destroyed at global destruction; memory leak likely!", self_sv);
-        }
+        _warn_if_global_destruct(self_sv, env_sp);
 
         m3_FreeEnvironment(env_sp->env);
 
@@ -496,9 +499,7 @@ DESTROY (SV* self_sv)
     CODE:
         ww3_runtime_s* rt_sp = exs_structref_ptr(self_sv);
 
-        if (PL_dirty && rt_sp->pid == getpid()) {
-            warn("%" SVf " destroyed at global destruction; memory leak likely!", self_sv);
-        }
+        _warn_if_global_destruct(self_sv, rt_sp);
 
         ww3_runtime_userdata_s* userdata = m3_GetUserData(rt_sp->rt);
         if (userdata) {
@@ -693,9 +694,7 @@ DESTROY (SV* self_sv)
     CODE:
         ww3_module_s* mod_sp = exs_structref_ptr(self_sv);
 
-        if (PL_dirty && mod_sp->pid == getpid()) {
-            warn("%" SVf " destroyed at global destruction; memory leak likely!", self_sv);
-        }
+        _warn_if_global_destruct(self_sv, mod_sp);
 
         if (!m3_GetModuleRuntime(mod_sp->module)) {
             Safefree(mod_sp->bytes);
