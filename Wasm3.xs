@@ -195,6 +195,7 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
     }
     else {
         warn_sv(err);
+        SvREFCNT_dec(err);
         errstr = "Perl callback threw exception";
     }
 

@@ -27,7 +27,7 @@ L<Wasmtime|https://wasmtime.dev>, or L<WAVM|https://github.com/wavm/wavm>
 often have build processes that take a long time or fail easily. The
 resulting library can be quite large, too.
 
-Enter L<wasm3|https://github.com/wasm3/wasm3>, which takes a different
+L<wasm3|https://github.com/wasm3/wasm3> takes a different
 approach from the “big dogs”: whereas the above are all JIT compilers,
 wasm3 is a WebAssembly I<interpreter>. This makes it quite small and
 fast/simple to build. Runtime performance suffers accordingly, of course,
