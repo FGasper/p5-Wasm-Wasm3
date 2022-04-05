@@ -62,7 +62,7 @@ sub postamble {
 
 .PHONY:
 build-wasm3:
-\t$cmake_path -S wasm3 -B wasm3
+\t$cmake_path -D CMAKE_C_FLAGS=-fPIC -S wasm3 -B wasm3
 \t\$(MAKE) -C wasm3
 MAKE_FRAG
 }

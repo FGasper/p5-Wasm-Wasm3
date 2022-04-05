@@ -1,15 +1,8 @@
-package Wasm::Wasm3;
+# NAME
 
-use strict;
-use warnings;
+Wasm::Wasm3 - Self-contained [WebAssembly](https://webassembly.org/) via [wasm3](https://github.com/wasm3/wasm3)
 
-=encoding utf-8
-
-=head1 NAME
-
-Wasm::Wasm3 - Self-contained L<WebAssembly|https://webassembly.org/> via L<wasm3|https://github.com/wasm3/wasm3>
-
-=head1 SYNOPSIS
+# SYNOPSIS
 
 Basic setup:
 
@@ -37,93 +30,75 @@ Implement a WebAssembly-imported function in Perl:
 
     $runtime->link_function('mod-name', 'func-name', 'v(ii)', $coderef);
 
-=head1 DESCRIPTION
+# DESCRIPTION
 
-Well-known WebAssembly runtimes like L<Wasmer|https://wasmer.io>,
-L<Wasmtime|https://wasmtime.dev>, or L<WAVM|https://github.com/wavm/wavm>
+Well-known WebAssembly runtimes like [Wasmer](https://wasmer.io),
+[Wasmtime](https://wasmtime.dev), or [WAVM](https://github.com/wavm/wavm)
 often require nonstandard dependencies/toolchains (e.g., LLVM or Rust).
 Their builds can take a while, especially on slow machines.
 
-L<wasm3|https://github.com/wasm3/wasm3> takes a different tactic from
+[wasm3](https://github.com/wasm3/wasm3) takes a different tactic from
 the aforementioned “big dogs”: whereas those are all JIT compilers,
-wasm3 is a WebAssembly I<interpreter>. This makes it quite small and
+wasm3 is a WebAssembly _interpreter_. This makes it quite small and
 fast/simple to build, which lets you run WebAssembly on small devices or
 OSes that something bigger may not support. Runtime performance lags the
 “big dogs” accordingly, of course.
 
 This distribution includes wasm3, so you don’t need to build it yourself.
 
-=head1 STATUS
+# STATUS
 
 This Perl library is EXPERIMENTAL.
 
 Additionally, wasm3’s API is, as of this writing, rather less complete than
 those of Wasmer et al. wasm3 only exports a single WebAssembly memory, for
 example. It also can’t import memories or globals, and it neither imports
-I<nor> exports tables.
+_nor_ exports tables.
 
-=head1 DOCUMENTATION
+# DOCUMENTATION
 
 This module generally documents only those aspects of its usage that
 are germane to this module specifically. For more details, see
 wasm3’s documentation.
 
-=cut
+# STATIC FUNCTIONS & CONSTANTS
 
-#----------------------------------------------------------------------
-
-use XSLoader;
-
-our $VERSION = '0.01_01';
-
-XSLoader::load( __PACKAGE__, $VERSION );
-
-#----------------------------------------------------------------------
-
-=head1 STATIC FUNCTIONS & CONSTANTS
-
-=head2 ($MAJOR, $MINOR, $REV) = m3_version()
+## ($MAJOR, $MINOR, $REV) = m3\_version()
 
 Returns wasm3’s version as 3 integers.
 
-=head2 $STRING = m3_version_string()
+## $STRING = m3\_version\_string()
 
 Returns wasm3’s version as a string.
 
-=head2 C<TYPE_I32>, C<TYPE_I64>, C<TYPE_F32>, C<TYPE_F64>
+## `TYPE_I32`, `TYPE_I64`, `TYPE_F32`, `TYPE_F64`
 
 Numeric constants that indicate the corresponding WebAssembly type.
 
-=head1 METHODS
+# METHODS
 
-=head2 $WASM3_ENV = I<CLASS>->new()
+## $WASM3\_ENV = _CLASS_->new()
 
-Instanties I<CLASS>.
+Instanties _CLASS_.
 Creates a new wasm3 environment and binds it to the returned object.
 
-=head2 $RUNTIME = I<OBJ>->create_runtime( $STACKSIZE )
+## $RUNTIME = _OBJ_->create\_runtime( $STACKSIZE )
 
-Creates a new wasm3 runtime from I<OBJ>.
-Returns a L<Wasm::Wasm3::Runtime> instance.
+Creates a new wasm3 runtime from _OBJ_.
+Returns a [Wasm::Wasm3::Runtime](https://metacpan.org/pod/Wasm%3A%3AWasm3%3A%3ARuntime) instance.
 
-=head2 $MODULE = I<OBJ>->parse_module( $WASM_BINARY )
+## $MODULE = _OBJ_->parse\_module( $WASM\_BINARY )
 
-Loads a WebAssembly module from I<binary> (F<*.wasm>) format.
-Returns a L<Wasm::Wasm3::Module> instance.
+Loads a WebAssembly module from _binary_ (`*.wasm`) format.
+Returns a [Wasm::Wasm3::Module](https://metacpan.org/pod/Wasm%3A%3AWasm3%3A%3AModule) instance.
 
 If your WebAssembly module is in text format rather than binary,
 you’ll need to convert it first. Try
-L<wabt|https://github.com/webassembly/wabt> if you need such a tool.
+[wabt](https://github.com/webassembly/wabt) if you need such a tool.
 
-=cut
-
-=head1 LICENSE & COPYRIGHT
+# LICENSE & COPYRIGHT
 
 Copyright 2022 Gasper Software Consulting. All rights reserved.
 
 This library is licensed under the same terms as Perl itself.
-See L<perlartistic>.
-
-=cut
-
-1;
+See [perlartistic](https://metacpan.org/pod/perlartistic).
