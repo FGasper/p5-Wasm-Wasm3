@@ -169,25 +169,33 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
 
     _wasm3_to_perl_svs(aTHX_ wasm_func, args_count, _sp + rets_count, arg_svs);
 
-    SV** ret_svs = exs_call_sv_list(callback, arg_svs);
+    SV* err;
 
-    int got_count = 0;
-    if (ret_svs) {
-        SV** p = ret_svs;
-        while (*p++) got_count++;
-    }
+    SV** ret_svs = exs_call_sv_list_trapped(callback, arg_svs, &err);
 
     const char* errstr = NULL;
 
-    if (got_count == rets_count) {
-        _perl_svs_to_wasm3( aTHX_ wasm_func, ret_svs, got_count, _sp );
+    if (ret_svs) {
+        int got_count = 0;
+        if (ret_svs) {
+            SV** p = ret_svs;
+            while (*p++) got_count++;
+        }
+
+        if (got_count == rets_count) {
+            _perl_svs_to_wasm3( aTHX_ wasm_func, ret_svs, got_count, _sp );
+        }
+        else {
+            errstr = "Mismatched return values";
+        }
+
+        if (ret_svs) {
+            while (got_count--) SvREFCNT_dec(ret_svs[got_count]);
+        }
     }
     else {
-        errstr = "Mismatched return values";
-    }
-
-    if (ret_svs) {
-        while (got_count--) SvREFCNT_dec(ret_svs[got_count]);
+        warn_sv(err);
+        errstr = "Perl callback threw exception";
     }
 
     if (errstr) m3ApiTrap(errstr);
