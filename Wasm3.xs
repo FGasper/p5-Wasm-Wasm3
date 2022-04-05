@@ -1,3 +1,23 @@
+/*
+export const MEANING :u8 = 42;
+
+export function give42 () :u8 {
+    return 42;
+}
+
+export function add1 (input: u8) :u8 {
+    return input + 1;
+}
+
+declare function saythis_and_add1 (input: i32) :i32;
+
+export function call_saythis (input: i32) :i32 {
+    return saythis_and_add1(input);
+}
+
+perl Makefile.PL && make && perl -MData::Dumper -MFile::Slurper -Mblib -MWasm::Wasm3 -e'my $wasm = Wasm::Wasm3->new(); my $rt = $wasm->create_runtime(1234); my $mod = $wasm->parse_module( File::Slurper::read_binary("give42.wasm") ); $rt->load_module($mod); print $rt->get_memory_size(); $mod->link_function("give42", "saythis_and_add1", "i(i)", sub { print "got: $_[0]\n"; 234234 }); print Dumper($rt->call("call_saythis", 44)); print $rt->get_memory_size() . $/; printf "%v.02x\n", $rt->get_memory(0, 24); $rt->set_memory(5, "hello"); printf "%v.02x\n", $rt->get_memory(0, 24);'
+*/
+
 #include "easyxs/easyxs.h"
 
 #include "wasm3/source/wasm3.h"
