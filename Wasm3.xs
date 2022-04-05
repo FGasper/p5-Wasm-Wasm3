@@ -236,26 +236,17 @@ MODULE = Wasm::Wasm3        PACKAGE = Wasm::Wasm3
 PROTOTYPES: DISABLE
 
 BOOT:
+    SV* m3_version_nums[] = {
+        newSVuv(M3_VERSION_MAJOR),
+        newSVuv(M3_VERSION_MINOR),
+        newSVuv(M3_VERSION_REV),
+    };
+    newCONSTSUB(gv_stashpv(PERL_NS, 0), "m3_version", (SV*) av_make( sizeof(m3_version_nums) / sizeof(SV*), m3_version_nums ));
+    newCONSTSUB(gv_stashpv(PERL_NS, 0), "m3_version_string", newSVpvs(M3_VERSION));
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_I32", newSVuv(c_m3Type_i32));
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_I64", newSVuv(c_m3Type_i64));
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_F32", newSVuv(c_m3Type_f32));
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_F64", newSVuv(c_m3Type_f64));
-
-void
-m3_version ()
-    PPCODE:
-        EXTEND(SP, 3);
-        mPUSHs( newSVuv(M3_VERSION_MAJOR) );
-        mPUSHs( newSVuv(M3_VERSION_MINOR) );
-        mPUSHs( newSVuv(M3_VERSION_REV) );
-        XSRETURN(3);
-
-const char*
-m3_version_string ()
-    CODE:
-        RETVAL = M3_VERSION;
-    OUTPUT:
-        RETVAL
 
 SV*
 new (const char* classname)
@@ -427,10 +418,6 @@ load_module (SV* self_sv, SV* module_sv)
 
         if (res) croak("%s", res);
 
-        /* m3_LoadModule transfers ownership of the module. */
-        Safefree(mod_sp->bytes);
-        mod_sp->bytes = NULL;
-
         rt_sp->any_modules_linked = true;
 
         RETVAL = SvREFCNT_inc(self_sv);
@@ -513,8 +500,15 @@ DESTROY (SV* self_sv)
             warn("%" SVf " destroyed at global destruction; memory leak likely!", self_sv);
         }
 
-        void* userdata = m3_GetUserData(rt_sp->rt);
-        if (userdata) Safefree(userdata);
+        ww3_runtime_userdata_s* userdata = m3_GetUserData(rt_sp->rt);
+        if (userdata) {
+            for (unsigned c=0; c < userdata->coderefs_count; c++) {
+                SvREFCNT_dec(userdata->coderefs[c]);
+            }
+
+            Safefree(userdata->coderefs);
+            Safefree(userdata);
+        }
 
         m3_FreeRuntime(rt_sp->rt);
 
@@ -703,7 +697,7 @@ DESTROY (SV* self_sv)
             warn("%" SVf " destroyed at global destruction; memory leak likely!", self_sv);
         }
 
-        if (mod_sp->bytes) {
+        if (!m3_GetModuleRuntime(mod_sp->module)) {
             Safefree(mod_sp->bytes);
             m3_FreeModule(mod_sp->module);
         }

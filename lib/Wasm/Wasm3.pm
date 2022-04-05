@@ -7,31 +7,60 @@ use warnings;
 
 =head1 NAME
 
-Wasm::Wasm3 - L<WebAssembly|https://webassembly.org/> in Perl via L<wasm3|https://github.com/wasm3/wasm3>
+Wasm::Wasm3 - Self-contained L<WebAssembly|https://webassembly.org/> via L<wasm3|https://github.com/wasm3/wasm3>
 
 =head1 SYNOPSIS
+
+Basic setup:
 
     my $env = Wasm::Wasm3->new();
     my $module = $env->parse_module($wasm_binary);
     my $runtime = $env->create_runtime(1024)->load_module($module);
 
+WebAssembly-exported globals:
+
     my $global = $module->get_global('some-value');
+
     $module->set_global('some-value', 1234);
+
+WebAssembly-exported memory:
+
+    $runtime->set_memory( $offset, $bytes );
+
+    my $from_wasm = $runtime->get_memory( $offset, $length );
+
+Call a WebAssembly-exported function:
 
     my @out = $runtime->call('some-func', @args);
 
+Implement a WebAssembly-imported function in Perl:
+
+    $runtime->link_function('mod-name', 'func-name', 'v(ii)', $coderef);
+
 =head1 DESCRIPTION
 
-WebAssembly runtimes like L<Wasmer|https://wasmer.io>,
+Well-known WebAssembly runtimes like L<Wasmer|https://wasmer.io>,
 L<Wasmtime|https://wasmtime.dev>, or L<WAVM|https://github.com/wavm/wavm>
-often have build processes that take a long time or fail easily. The
-resulting library can be quite large, too.
+often require nonstandard dependencies/toolchains (e.g., LLVM or Rust).
+Their builds can take a while, especially on slow machines.
 
-L<wasm3|https://github.com/wasm3/wasm3> takes a different
-approach from the “big dogs”: whereas the above are all JIT compilers,
+L<wasm3|https://github.com/wasm3/wasm3> takes a different tactic from
+the aforementioned “big dogs”: whereas those are all JIT compilers,
 wasm3 is a WebAssembly I<interpreter>. This makes it quite small and
-fast/simple to build. Runtime performance suffers accordingly, of course,
-but that’s not always the worst of things.
+fast/simple to build, so you can run WebAssembly on small devices that
+may not as readily support something bigger. Runtime performance suffers
+accordingly, of course, but in some contexts that’s OK.
+
+This distribution includes wasm3, so you don’t 
+
+=head1 STATUS
+
+This Perl library is EXPERIMENTAL.
+
+Additionally, wasm3’s API is, as of this writing, rather less complete than
+those of Wasmer et al. wasm3 only exports a single WebAssembly memory, for
+example. It also can’t import memories or globals, and it neither imports
+I<nor> exports tables.
 
 =head1 DOCUMENTATION
 
@@ -85,6 +114,15 @@ Returns a L<Wasm::Wasm3::Module> instance.
 If your WebAssembly module is in text format rather than binary,
 you’ll need to convert it first. Try
 L<wabt|https://github.com/webassembly/wabt> if you need such a tool.
+
+=cut
+
+=head1 LICENSE & COPYRIGHT
+
+Copyright 2022 Gasper Software Consulting. All rights reserved.
+
+This library is licensed under the same terms as Perl itself.
+See L<perlartistic>.
 
 =cut
 
