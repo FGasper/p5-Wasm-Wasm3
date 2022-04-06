@@ -116,27 +116,30 @@ static IM3Global _get_module_sv_global (pTHX_ SV* self_sv, SV* name_sv) {
     return m3_FindGlobal(mod_sp->module, name);
 }
 
-static void _perl_svs_to_wasm3 (pTHX_ IM3Function o_function, SV** svs, unsigned count, uint64_t* vals) {
+static void _perl_svs_to_wasm3 (pTHX_ IM3Function o_function, SV** svs, unsigned count, M3ValueType* types, uint64_t* vals) {
     for (unsigned a=0; a<count; a++) {
+        SV* cur_sv = svs[a];
 
-        switch (m3_GetArgType(o_function, a)) {
+        void* wasm3_datum_ptr = vals + a;
+
+        switch (types[a]) {
             case c_m3Type_none:
                 assert(0 /* c_m3Type_none */);
 
             case c_m3Type_i32:
-                *( (int32_t*) (vals + a) ) = SvIV( svs[a] );
+                *( (int32_t*) wasm3_datum_ptr ) = SvIV( cur_sv );
                 break;
 
             case c_m3Type_i64:
-                vals[a] = SvIV( svs[a] );
+                *( (int64_t*) wasm3_datum_ptr ) = SvIV( cur_sv );
                 break;
 
             case c_m3Type_f32:
-                *( (float*) (vals + a) ) = SvNV( svs[a] );
+                *( (float*) wasm3_datum_ptr ) = SvNV( cur_sv );
                 break;
 
             case c_m3Type_f64:
-                *( (double*) (vals + a) ) = SvNV( svs[a] );
+                *( (double*) wasm3_datum_ptr ) = SvNV( cur_sv );
                 break;
 
             default:
@@ -210,7 +213,12 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
         }
 
         if (got_count == rets_count) {
-            _perl_svs_to_wasm3( aTHX_ wasm_func, ret_svs, got_count, _sp );
+            M3ValueType types[got_count];
+            for (unsigned r=0; r<got_count; r++) {
+                types[r] = m3_GetRetType(wasm_func, r);
+            }
+
+            _perl_svs_to_wasm3( aTHX_ wasm_func, ret_svs, got_count, types, _sp );
         }
         else {
             errstr = "Mismatched return values";
@@ -225,6 +233,8 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
         SvREFCNT_dec(err);
         errstr = "Perl callback threw exception";
     }
+
+    Safefree(ret_svs);
 
     if (errstr) m3ApiTrap(errstr);
 
@@ -390,12 +400,14 @@ call (SV* self_sv, SV* name_sv, ...)
 
         void* argptrs[args_count];
         uint64_t args[args_count];
-
-        _perl_svs_to_wasm3( aTHX_ o_function, &ST(2), args_count, args );
+        M3ValueType types[args_count];
 
         for (unsigned a=0; a<args_count; a++) {
             argptrs[a] = args + a;
+            types[a] = m3_GetArgType(o_function, a);
         }
+
+        _perl_svs_to_wasm3( aTHX_ o_function, &ST(2), args_count, types, args );
 
         res = m3_Call( o_function, args_count, (const void **) argptrs );
         if (res) croak("%s(): %s", name, res);

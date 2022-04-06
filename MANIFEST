@@ -1,4 +1,6 @@
+MANIFEST
 Makefile.PL
+README.md
 Wasm3.xs
 cpanfile
 easyxs/LICENSE
