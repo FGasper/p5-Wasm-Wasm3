@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Test::More;
+use Test::Deep;
 use Test::FailWarnings;
 
 use Wasm::Wasm3;
@@ -29,7 +30,7 @@ my $value = $rt->call('callfunc');
 
 is_deeply( \@params_to_perl, [0, 2], 'params WASM -> Perl callback' );
 
-is( $value, 2.345, 'expected value from WASM -> Perl caller' );
+cmp_deeply( $value, num(2.345, 0.01), 'expected value from WASM -> Perl caller' );
 
 done_testing;
 
