@@ -65,7 +65,7 @@ sub postamble {
 .PHONY:
 build-wasm3:
 \t$cmake_path -D CMAKE_C_FLAGS='-fPIC -D_GNU_SOURCE' -S wasm3 -B wasm3
-\t\$(MAKE) -C wasm3 source/libm3.a
+\t\$(MAKE) -C wasm3
 MAKE_FRAG
 }
 
