@@ -50,9 +50,9 @@ This distribution includes wasm3, so you don’t need to build it yourself.
 
 This Perl library is EXPERIMENTAL.
 
-Additionally, wasm3’s API is, as of this writing, rather less complete than
-those of Wasmer et al. wasm3 only exports a single WebAssembly memory, for
-example. It also can’t import memories or globals, and it neither imports
+Additionally, wasm3 is, as of this writing, rather less complete than
+Wasmer et al. wasm3 only exports a single WebAssembly memory, for
+example. It can’t import memories or globals, and it neither imports
 _nor_ exports tables.
 
 # DOCUMENTATION
