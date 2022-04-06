@@ -8,3 +8,5 @@ Makefile.old
 *META.*
 .*.sw?
 *.tar.gz
+*.gc*
+cover_db/

@@ -58,12 +58,14 @@ sub postamble {
         Alien::cmake3->exe(),
     );
 
+    # _GNU_SOURCE is for Cygwin. It still fails to build, but at least
+    # it’s a bit closer to success this way.
     return <<"MAKE_FRAG"
 
 .PHONY:
 build-wasm3:
-\t$cmake_path -D CMAKE_C_FLAGS=-fPIC -S wasm3 -B wasm3
-\t\$(MAKE) -C wasm3
+\t$cmake_path -D CMAKE_C_FLAGS='-fPIC -D_GNU_SOURCE' -S wasm3 -B wasm3
+\t\$(MAKE) -C wasm3 source/libm3.a
 MAKE_FRAG
 }
 

@@ -1,23 +1,3 @@
-/*
-export const MEANING :u8 = 42;
-
-export function give42 () :u8 {
-    return 42;
-}
-
-export function add1 (input: u8) :u8 {
-    return input + 1;
-}
-
-declare function saythis_and_add1 (input: i32) :i32;
-
-export function call_saythis (input: i32) :i32 {
-    return saythis_and_add1(input);
-}
-
-perl Makefile.PL && make && perl -MData::Dumper -MFile::Slurper -Mblib -MWasm::Wasm3 -e'my $wasm = Wasm::Wasm3->new(); my $rt = $wasm->create_runtime(1234); my $mod = $wasm->parse_module( File::Slurper::read_binary("give42.wasm") ); $rt->load_module($mod); print $rt->get_memory_size(); $mod->link_function("give42", "saythis_and_add1", "i(i)", sub { print "got: $_[0]\n"; 234234 }); print Dumper($rt->call("call_saythis", 44)); print $rt->get_memory_size() . $/; printf "%v.02x\n", $rt->get_memory(0, 24); $rt->set_memory(5, "hello"); printf "%v.02x\n", $rt->get_memory(0, 24);'
-*/
-
 #include "easyxs/easyxs.h"
 
 #include "wasm3/source/wasm3.h"
@@ -34,7 +14,7 @@ perl Makefile.PL && make && perl -MData::Dumper -MFile::Slurper -Mblib -MWasm::W
 #define MAX_MEMSIZE MAX_UINT32
 
 #define _warn_if_global_destruct(self_sv, the_struct) \
-    if (PL_dirty && the_struct->pid == getpid()) { \
+    if (PL_dirty && (the_struct->pid == getpid())) { \
         warn("%" SVf " destroyed at global destruction; memory leak likely!", self_sv); \
     }
 
@@ -49,9 +29,7 @@ typedef struct {
     pid_t pid;
     bool any_modules_linked;
 
-    /* Only one of these gets set: */
     SV* env_sv;
-    IM3Environment own_env;
 } ww3_runtime_s;
 
 typedef struct {
@@ -71,22 +49,17 @@ typedef struct {
 } ww3_runtime_userdata_s;
 
 static SV* _create_runtime (pTHX_ const char* classname, SV* stacksize_sv, SV* env_sv) {
-    uint32_t stacksize = exs_SvUV(stacksize_sv);
+    UV stacksize = exs_SvUV(stacksize_sv);
     if (stacksize > 0xffffffff) {
-        croak("Stack size (%" PRIu32 ") exceeds max allowed (%u)", stacksize, 0xffffffffU);
+        croak("Stack size (%" UVf ") exceeds max allowed (%u)", stacksize, 0xffffffffU);
     }
 
     IM3Environment env;
 
-    if (env_sv) {
-        SvREFCNT_inc(env_sv);
+    SvREFCNT_inc(env_sv);
 
-        ww3_environ_s* env_sp = exs_structref_ptr(env_sv);
-        env = env_sp->env;
-    }
-    else {
-        env = m3_NewEnvironment();
-    }
+    ww3_environ_s* env_sp = exs_structref_ptr(env_sv);
+    env = env_sp->env;
 
     SV* self_sv = exs_new_structref(ww3_runtime_s, classname);
     ww3_runtime_s* rt_sp = exs_structref_ptr(self_sv);
@@ -102,7 +75,6 @@ static SV* _create_runtime (pTHX_ const char* classname, SV* stacksize_sv, SV* e
         .rt = m3_NewRuntime(env, stacksize, userdata_p),
         .pid = getpid(),
         .env_sv = env_sv,
-        .own_env = env_sv ? env : NULL,
     };
 
     return self_sv;
@@ -230,7 +202,6 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
     }
     else {
         warn_sv(err);
-        SvREFCNT_dec(err);
         errstr = "Perl callback threw exception";
     }
 
@@ -350,13 +321,6 @@ DESTROY (SV* self_sv)
 # ----------------------------------------------------------------------
 
 MODULE = Wasm::Wasm3        PACKAGE = Wasm::Wasm3::Runtime
-
-SV*
-new (const char* classname, SV* stacksize_sv)
-    CODE:
-        RETVAL = _create_runtime(aTHX_ classname, stacksize_sv, NULL);
-    OUTPUT:
-        RETVAL
 
 void
 get_function_arguments (SV* self_sv, SV* name_sv)
