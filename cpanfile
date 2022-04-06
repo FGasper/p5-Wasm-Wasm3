@@ -1,3 +1,4 @@
+configure_requires 'ExtUtils::MakeMaker::CPANfile';
 configure_requires 'Alien::cmake3';
 
 test_requires 'File::Slurper';
