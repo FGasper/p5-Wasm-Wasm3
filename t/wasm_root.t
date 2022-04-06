@@ -11,7 +11,7 @@ use Wasm::Wasm3 ();
 {
     my $env = Wasm::Wasm3->new();
 
-    isa_ok($env, 'Wasm::Wasm3::Environment', 'new() result');
+    isa_ok($env, 'Wasm::Wasm3', 'new() result');
 }
 
 {
