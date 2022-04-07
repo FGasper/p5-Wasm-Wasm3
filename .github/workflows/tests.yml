@@ -14,106 +14,106 @@ env:
    PERL_CARTON_PATH: $GITHUB_WORKSPACE/local
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        perl-version:
-          - '5.34'
-          - '5.32'
-          - '5.30'
-          - '5.28'
-          - '5.26'
-          - '5.24'
-          - '5.22'
-          - '5.20'
-          - '5.18'
-          - '5.16'
-          - '5.14'
-          - '5.12'
-          - '5.10'
-
-    container:
-      image: perldocker/perl-tester:${{ matrix.perl-version }}
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-            submodules: recursive
-      - run: apt install -y cmake
-      - name: perl -V
-        run: perl -V
-      - name: Install Dependencies
-        run: cpanm --notest --installdeps --with-configure --with-develop .
-      - name: perl Makefile.PL
-        run: perl Makefile.PL
-      - name: make
-        run: make
-      - name: Run Tests
-        run: prove -wlvmb t
-
-  linux-specialperls:
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        perl-version:
-          - '5.020.003'
-          #- '5.022.004'    # no quadmath
-          - '5.024.004'
-          - '5.026.003'
-          - '5.028.003'
-          - '5.030.003'
-          - '5.032.001'
-        perl-type:
-          - 'main-longdouble-buster'
-          - 'main-quadmath-buster'
-
-    container:
-      image: simcop2387/perl-tester:${{ matrix.perl-version }}-${{ matrix.perl-type }}
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-            submodules: recursive
-      - run: perl -V
-      - run: apt update
-      - run: apt install -y curl cmake
-      - name: Install Dependencies
-        run: curl -L https://cpanmin.us | perl - --notest --installdeps --with-configure --with-develop .
-      - name: perl Makefile.PL
-        run: perl Makefile.PL
-      - name: make
-        run: make
-      - name: Run Tests
-        run: prove -wlvmb t
-
-  mac:
-    runs-on: macOS-latest
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-            submodules: recursive
-      - name: Set up Perl
-        run: brew install perl cmake
-      - name: perl -V
-        run: perl -V
-      - name: Install Dependencies
-        run: curl -L https://cpanmin.us | perl - --notest --installdeps --with-develop --with-configure .
-      - name: perl Makefile.PL
-        run: perl Makefile.PL
-      - name: make
-        run: make
-      - name: Run tests (with coverage)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          curl -L https://cpanmin.us | perl - --notest Devel::Cover::Report::Coveralls
-          `perl -MConfig -E'print $Config::Config{"sitebin"}'`/cover -test -report Coveralls -ignore_re easyxs -ignore_re inline
+#  linux:
+#    runs-on: ubuntu-latest
+#
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        perl-version:
+#          - '5.34'
+#          - '5.32'
+#          - '5.30'
+#          - '5.28'
+#          - '5.26'
+#          - '5.24'
+#          - '5.22'
+#          - '5.20'
+#          - '5.18'
+#          - '5.16'
+#          - '5.14'
+#          - '5.12'
+#          - '5.10'
+#
+#    container:
+#      image: perldocker/perl-tester:${{ matrix.perl-version }}
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#        with:
+#            submodules: recursive
+#      - run: apt install -y cmake
+#      - name: perl -V
+#        run: perl -V
+#      - name: Install Dependencies
+#        run: cpanm --notest --installdeps --with-configure --with-develop .
+#      - name: perl Makefile.PL
+#        run: perl Makefile.PL
+#      - name: make
+#        run: make
+#      - name: Run Tests
+#        run: prove -wlvmb t
+#
+#  linux-specialperls:
+#    runs-on: ubuntu-latest
+#
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        perl-version:
+#          - '5.020.003'
+#          #- '5.022.004'    # no quadmath
+#          - '5.024.004'
+#          - '5.026.003'
+#          - '5.028.003'
+#          - '5.030.003'
+#          - '5.032.001'
+#        perl-type:
+#          - 'main-longdouble-buster'
+#          - 'main-quadmath-buster'
+#
+#    container:
+#      image: simcop2387/perl-tester:${{ matrix.perl-version }}-${{ matrix.perl-type }}
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#        with:
+#            submodules: recursive
+#      - run: perl -V
+#      - run: apt update
+#      - run: apt install -y curl cmake
+#      - name: Install Dependencies
+#        run: curl -L https://cpanmin.us | perl - --notest --installdeps --with-configure --with-develop .
+#      - name: perl Makefile.PL
+#        run: perl Makefile.PL
+#      - name: make
+#        run: make
+#      - name: Run Tests
+#        run: prove -wlvmb t
+#
+#  mac:
+#    runs-on: macOS-latest
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#        with:
+#            submodules: recursive
+#      - name: Set up Perl
+#        run: brew install perl cmake
+#      - name: perl -V
+#        run: perl -V
+#      - name: Install Dependencies
+#        run: curl -L https://cpanmin.us | perl - --notest --installdeps --with-develop --with-configure .
+#      - name: perl Makefile.PL
+#        run: perl Makefile.PL
+#      - name: make
+#        run: make
+#      - name: Run tests (with coverage)
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          curl -L https://cpanmin.us | perl - --notest Devel::Cover::Report::Coveralls
+#          `perl -MConfig -E'print $Config::Config{"sitebin"}'`/cover -test -report Coveralls -ignore_re easyxs -ignore_re inline
 
   qemu-alpine:
     runs-on: ubuntu-latest
@@ -122,9 +122,9 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - i386
-          - arm32v6
-          - arm32v7
+#          - i386
+#          - arm32v6
+#          - arm32v7
           - s390x
 
     steps:
@@ -162,37 +162,37 @@ jobs:
 #        run: cd $GITHUB_WORKSPACE; make test
 #        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
 
-  BSDs:
-    runs-on: macos-10.15
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - name: freebsd
-            version: '13.0'
-            pkginstall: pkg install -y git cmake p5-ExtUtils-MakeMaker
-          - name: freebsd
-            version: '12.2'
-            pkginstall: pkg install -y git cmake p5-ExtUtils-MakeMaker
-          - name: openbsd
-            version: '6.9'
-            pkginstall: pkg_add git cmake curl p5-ExtUtils-MakeMaker
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-
-      - name: Test on ${{ matrix.os.name }}
-        uses: cross-platform-actions/action@v0.3.1
-        with:
-          operating_system: ${{ matrix.os.name }}
-          version: ${{ matrix.os.version }}
-          shell: bash
-          run: |
-            sudo ${{ matrix.os.pkginstall }}
-            curl -L https://cpanmin.us | sudo perl - --notest --installdeps --with-configure --with-develop .
-            perl Makefile.PL
-            make
-            prove -wlvmb t
+#  BSDs:
+#    runs-on: macos-10.15
+#
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        os:
+#          - name: freebsd
+#            version: '13.0'
+#            pkginstall: pkg install -y git cmake p5-ExtUtils-MakeMaker
+#          - name: freebsd
+#            version: '12.2'
+#            pkginstall: pkg install -y git cmake p5-ExtUtils-MakeMaker
+#          - name: openbsd
+#            version: '6.9'
+#            pkginstall: pkg_add git cmake curl p5-ExtUtils-MakeMaker
+#
+#    steps:
+#      - uses: actions/checkout@v3
+#        with:
+#          submodules: recursive
+#
+#      - name: Test on ${{ matrix.os.name }}
+#        uses: cross-platform-actions/action@v0.3.1
+#        with:
+#          operating_system: ${{ matrix.os.name }}
+#          version: ${{ matrix.os.version }}
+#          shell: bash
+#          run: |
+#            sudo ${{ matrix.os.pkginstall }}
+#            curl -L https://cpanmin.us | sudo perl - --notest --installdeps --with-configure --with-develop .
+#            perl Makefile.PL
+#            make
+#            prove -wlvmb t

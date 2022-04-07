@@ -74,9 +74,15 @@ wasm3’s documentation.
 
 use XSLoader;
 
-our $VERSION = '0.01_01';
+our $VERSION;
 
-XSLoader::load( __PACKAGE__, $VERSION );
+BEGIN {
+    $VERSION = '0.01_01';
+
+    XSLoader::load( __PACKAGE__, $VERSION );
+}
+
+use constant m3_version => (_M3_VERSION_MAJOR, _M3_VERSION_MINOR, _M3_VERSION_REV);
 
 #----------------------------------------------------------------------
 
