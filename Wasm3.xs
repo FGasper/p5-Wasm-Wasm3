@@ -37,6 +37,7 @@ typedef struct {
     pid_t pid;
     const uint8_t* bytes;
     STRLEN len;
+    SV* runtime_sv;
 } ww3_module_s;
 
 typedef struct {
@@ -249,7 +250,7 @@ BOOT:
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "_M3_VERSION_MINOR", newSVuv(M3_VERSION_MINOR));
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "_M3_VERSION_REV", newSVuv(M3_VERSION_REV));
 
-    newCONSTSUB(gv_stashpv(PERL_NS, 0), "m3_version_string", newSVpvs(M3_VERSION));
+    newCONSTSUB(gv_stashpv(PERL_NS, 0), "M3_VERSION_STRING", newSVpvs(M3_VERSION));
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_I32", newSVuv(c_m3Type_i32));
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_I64", newSVuv(c_m3Type_i64));
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_F32", newSVuv(c_m3Type_f32));
@@ -418,6 +419,7 @@ load_module (SV* self_sv, SV* module_sv)
 
         if (res) croak("%s", res);
 
+        mod_sp->runtime_sv = SvREFCNT_inc(self_sv);
         rt_sp->any_modules_linked = true;
 
         RETVAL = SvREFCNT_inc(self_sv);
@@ -693,7 +695,12 @@ DESTROY (SV* self_sv)
 
         _warn_if_global_destruct(self_sv, mod_sp);
 
-        if (!m3_GetModuleRuntime(mod_sp->module)) {
+        SV* runtime_sv = mod_sp->runtime_sv;
+
+        if (runtime_sv) {
+            SvREFCNT_dec(runtime_sv);
+        }
+        else {
             Safefree(mod_sp->bytes);
             m3_FreeModule(mod_sp->module);
         }

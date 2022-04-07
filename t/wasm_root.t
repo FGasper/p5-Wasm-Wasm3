@@ -9,24 +9,24 @@ use Test::FailWarnings;
 
 use Wasm::Wasm3 ();
 
-my @version_nums = Wasm::Wasm3::m3_version();
+my @version_nums = Wasm::Wasm3::M3_VERSION;
 
 cmp_deeply(
     \@version_nums,
     [
         map { re( qr<\A[0-9]+\z> ) } 1 .. 3,
     ],
-    'm3_version() returns 3 uints',
+    'M3_VERSION() returns 3 uints',
 );
 
 like(
-    Wasm::Wasm3::m3_version_string(),
+    Wasm::Wasm3::M3_VERSION_STRING,
     qr<\A
         .*$version_nums[0].*\.
         .*$version_nums[1].*\.
         .*$version_nums[2].*
     \z>x,
-    'm3_version_string()',
+    'M3_VERSION_STRING()',
 );
 
 {

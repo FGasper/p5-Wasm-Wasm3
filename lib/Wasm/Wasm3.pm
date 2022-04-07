@@ -47,8 +47,8 @@ Their builds can take a while, especially on slow machines.
 L<wasm3|https://github.com/wasm3/wasm3> takes a different tactic from
 the aforementioned “big dogs”: whereas those are all JIT compilers,
 wasm3 is a WebAssembly I<interpreter>. This makes it quite small and
-fast/simple to build, which lets you run WebAssembly on small devices or
-OSes that something bigger may not support. Runtime performance lags the
+fast/simple to build, which lets you run WebAssembly in environments
+that something bigger may not support. Runtime performance lags the
 “big dogs” accordingly, of course.
 
 This distribution includes wasm3, so you don’t need to build it yourself.
@@ -82,17 +82,17 @@ BEGIN {
     XSLoader::load( __PACKAGE__, $VERSION );
 }
 
-use constant m3_version => (_M3_VERSION_MAJOR, _M3_VERSION_MINOR, _M3_VERSION_REV);
+use constant M3_VERSION => (_M3_VERSION_MAJOR, _M3_VERSION_MINOR, _M3_VERSION_REV);
 
 #----------------------------------------------------------------------
 
 =head1 STATIC FUNCTIONS & CONSTANTS
 
-=head2 ($MAJOR, $MINOR, $REV) = m3_version()
+=head2 ($MAJOR, $MINOR, $REV) = M3_VERSION
 
 Returns wasm3’s version as 3 integers.
 
-=head2 $STRING = m3_version_string()
+=head2 $STRING = M3_VERSION_STRING
 
 Returns wasm3’s version as a string.
 
