@@ -565,37 +565,23 @@ get_global (SV* self_sv, SV* name_sv)
             M3Result res = m3_GetGlobal(i_global, &tagged);
             if (res) croak("%s", res);
 
-            fprintf(stderr, "sizeof(tagged.value)=%u\n", sizeof(tagged.value));
-            uint8_t* ptr = (uint8_t*) &tagged.value.i32;
-            for (unsigned i=0; i<sizeof(tagged.value); i++) {
-                fprintf(stderr, "%s%02x",
-                    (i==0) ? "\t" : ".",
-                    ptr[i]
-                );
-            }
-            fprintf(stderr, "\n");
-
             switch (tagged.type) {
                 case c_m3Type_none:
                     croak("Global “%" SVf "” is untyped!", name_sv);
 
                 case c_m3Type_i32:
-                    fprintf(stderr, "fetching global i32: %" PRIi32 "\n", tagged.value.i32);
                     RETVAL = newSViv( tagged.value.i32 );
                     break;
 
                 case c_m3Type_i64:
-                    fprintf(stderr, "fetching global i64: %" PRIi64 "\n", tagged.value.i64);
                     RETVAL = newSViv( tagged.value.i64 );
                     break;
 
                 case c_m3Type_f32:
-                    fprintf(stderr, "fetching global f32: %f\n", tagged.value.f32);
                     RETVAL = newSVnv( tagged.value.f32 );
                     break;
 
                 case c_m3Type_f64:
-                    fprintf(stderr, "fetching global f64: %f\n", tagged.value.f64);
                     RETVAL = newSVnv( tagged.value.f64 );
                     break;
 
