@@ -51,6 +51,7 @@ WriteMakefile(
 package MY;
 
 use Alien::cmake3;
+use Config;
 
 sub postamble {
     my $cmake_path = File::Spec->catfile(
@@ -64,7 +65,7 @@ sub postamble {
 
 .PHONY:
 build-wasm3:
-\t$cmake_path -D CMAKE_C_FLAGS='-fPIC -D_GNU_SOURCE' -S wasm3 -B wasm3
+\t$cmake_path -D CMAKE_C_FLAGS='-fPIC -D_GNU_SOURCE' -D CMAKE_MAKE_PROGRAM=$Config{make} -S wasm3 -B wasm3
 \t\$(MAKE) -C wasm3
 MAKE_FRAG
 }
