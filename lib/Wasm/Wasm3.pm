@@ -37,19 +37,24 @@ Implement a WebAssembly-imported function in Perl:
 
     $runtime->link_function('mod-name', 'func-name', 'v(ii)', $coderef);
 
+(C<v(ii)> is the function’s signature; see L<Wasm::Wasm3::Runtime> for
+details.)
+
 =head1 DESCRIPTION
 
 Well-known WebAssembly runtimes like L<Wasmer|https://wasmer.io>,
 L<Wasmtime|https://wasmtime.dev>, or L<WAVM|https://github.com/wavm/wavm>
 often require nonstandard dependencies/toolchains (e.g., LLVM or Rust).
-Their builds can take a while, especially on slow machines.
+Their builds can take a while, especially on slow machines, and only
+the most popular platforms may enjoy support.
 
 L<wasm3|https://github.com/wasm3/wasm3> takes a different tactic from
 the aforementioned “big dogs”: whereas those are all JIT compilers,
 wasm3 is a WebAssembly I<interpreter>. This makes it quite small and
 fast/simple to build, which lets you run WebAssembly in environments
 that something bigger may not support. Runtime performance lags the
-“big dogs” accordingly, of course.
+“big dogs” significantly, but startup latency will likely be lower, and
+memory usage is B<much> lower.
 
 This distribution includes wasm3, so you don’t need to build it yourself.
 

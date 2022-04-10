@@ -174,6 +174,7 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
 
     SV* err;
 
+    /* Perl auto-frees ret_svs. */
     SV** ret_svs = exs_call_sv_list_trapped(callback, arg_svs, &err);
 
     const char* errstr = NULL;
@@ -205,8 +206,6 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
         warn_sv(err);
         errstr = "Perl callback threw exception";
     }
-
-    Safefree(ret_svs);
 
     if (errstr) m3ApiTrap(errstr);
 

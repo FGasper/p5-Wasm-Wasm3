@@ -33,7 +33,11 @@ details.
 
 =head2 $value = I<OBJ>->get_global( $NAME )
 
-Returns the value of the $NAMEd global.
+Returns the value of the $NAMEd export global.
+
+=head2 $type = I<OBJ>->get_global_type( $NAME )
+
+Returns the type (e.g., Wasm::Wasm3::TYPE_I32) of the $NAMEd export global.
 
 =head2 $obj = I<OBJ>->link_function( $MODULE_NAME, $FUNCTION_NAME, $SIGNATURE, $CODEREF )
 
@@ -49,7 +53,7 @@ callback-failed error is thrown to the C<link_function()> caller.
 
 =head3 $SIGNATURE
 
-$SIGNATURE is wasm3’s own convention to describe the function’s inputs &
+$SIGNATURE is wasm3’s own convention to describe a function’s inputs &
 outputs. As of this writing wasm3’s documentation doesn’t describe it very
 well, so we’ll describe it here.
 
@@ -65,6 +69,9 @@ C<F>, (f64)
 =back
 
 Space characters are ignored.
+
+For example: C<v(if)> indicates a function that takes i32 and f32 as
+arguments and returns nothing.
 
 =cut
 
