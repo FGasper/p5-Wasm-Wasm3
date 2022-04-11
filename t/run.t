@@ -117,6 +117,29 @@ my $rt = $wasm->create_runtime(1024)->load_module($mod);
     );
 }
 
+{
+    my $mod = $wasm->parse_module($wasm_bin);
+    my $rt = $wasm->create_runtime(1024)->load_module($mod);
+
+    my @got;
+    $mod->link_function( qw(my func-all-args-no-rets), 'v(iIfF)', sub { @got = @_; () } );
+    $rt->call('call-all-args-no-rets');
+    cmp_deeply(
+        \@got,
+        [map { num($_, 0.001) } 123, 234, 3.45, 4.56],
+        'WASM -> SVs into callback',
+    );
+
+    $mod->link_function( qw(my func-no-args-all-rets), 'iIfF(v)', sub { ( 99, 999, 9.9, 99.9 ) } );
+
+    @got = $rt->call('call-no-args-all-rets');
+    cmp_deeply(
+        \@got,
+        [map { num($_, 0.001) } 99, 999, 9.9, 99.9],
+        'WASM -> SVs to Perl caller',
+    );
+}
+
 done_testing;
 
 1;

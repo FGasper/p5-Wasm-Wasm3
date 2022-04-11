@@ -89,7 +89,7 @@ static IM3Global _get_module_sv_global (pTHX_ SV* self_sv, SV* name_sv) {
     return m3_FindGlobal(mod_sp->module, name);
 }
 
-static void _perl_svs_to_wasm3 (pTHX_ IM3Function o_function, SV** svs, unsigned count, M3ValueType* types, uint64_t* vals) {
+static void _perl_svs_to_wasm3 (pTHX_ SV** svs, unsigned count, M3ValueType* types, uint64_t* vals) {
     for (unsigned a=0; a<count; a++) {
         SV* cur_sv = svs[a];
 
@@ -121,12 +121,13 @@ static void _perl_svs_to_wasm3 (pTHX_ IM3Function o_function, SV** svs, unsigned
     }
 }
 
-static void _wasm3_to_perl_svs (pTHX_ IM3Function o_function, unsigned count, uint64_t* vals, SV** svs) {
+static void _wasm3_to_perl_svs (pTHX_ unsigned count, M3ValueType* types, uint64_t* vals, SV** svs) {
+
     for (unsigned r=0; r<count; r++) {
         SV* newret;
         void* val_ptr = vals + r;
 
-        switch (m3_GetRetType(o_function, r)) {
+        switch (types[r]) {
             case c_m3Type_none:
                 assert(0 /* c_m3Type_none */);
 
@@ -170,7 +171,12 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
     SV* arg_svs[1 + args_count];
     arg_svs[args_count] = NULL;
 
-    _wasm3_to_perl_svs(aTHX_ wasm_func, args_count, _sp + rets_count, arg_svs);
+    M3ValueType arg_types[args_count];
+    for (unsigned a=0; a<args_count; a++) {
+        arg_types[a] = m3_GetArgType(wasm_func, a);
+    }
+
+    _wasm3_to_perl_svs(aTHX_ args_count, arg_types, _sp + rets_count, arg_svs);
 
     SV* err;
 
@@ -192,7 +198,7 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
                 types[r] = m3_GetRetType(wasm_func, r);
             }
 
-            _perl_svs_to_wasm3( aTHX_ wasm_func, ret_svs, got_count, types, _sp );
+            _perl_svs_to_wasm3( aTHX_ ret_svs, got_count, types, _sp );
         }
         else {
             errstr = "Mismatched return values";
@@ -372,7 +378,7 @@ call (SV* self_sv, SV* name_sv, ...)
             types[a] = m3_GetArgType(o_function, a);
         }
 
-        _perl_svs_to_wasm3( aTHX_ o_function, &ST(2), args_count, types, args );
+        _perl_svs_to_wasm3( aTHX_ &ST(2), args_count, types, args );
 
         res = m3_Call( o_function, args_count, (const void **) argptrs );
         if (res) croak("%s(): %s", name, res);
@@ -383,9 +389,11 @@ call (SV* self_sv, SV* name_sv, ...)
         else {
             void* retptrs[returns_count];
             uint64_t retvals[returns_count];
+            M3ValueType rettypes[returns_count];
             for (unsigned r=0; r<returns_count; r++) {
                 retvals[r] = 0;
                 retptrs[r] = &retvals[r];
+                rettypes[r] = m3_GetRetType(o_function, r);
             }
 
             res = m3_GetResults( o_function, returns_count, (const void **) retptrs );
@@ -393,7 +401,7 @@ call (SV* self_sv, SV* name_sv, ...)
 
             SV* ret_svs[returns_count];
 
-            _wasm3_to_perl_svs( aTHX_ o_function, returns_count, retvals, ret_svs );
+            _wasm3_to_perl_svs( aTHX_ returns_count, rettypes, retvals, ret_svs );
 
             EXTEND(SP, returns_count);
 
