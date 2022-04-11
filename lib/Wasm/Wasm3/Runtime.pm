@@ -41,9 +41,12 @@ Returns I<OBJ>.
 Calls the named function with the given arguments, returning the
 returns from that function.
 
+A scalar-context call to this method will produce an exception
+if the WebAssembly function returns multiple values.
+
 =head2 @types = I<OBJ>->get_function_arguments( $FUNCTION_NAME )
 
-Returns the named function’s argument types, as TYPE_* constants.
+Returns a list of the named function’s argument types, as TYPE_* constants.
 (cf. L<Wasm::Wasm3>)
 
 =head2 @types = I<OBJ>->get_function_returns( $FUNCTION_NAME )

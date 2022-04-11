@@ -82,9 +82,9 @@ Numeric constants that indicate the corresponding WebAssembly type.
 
 # METHODS
 
-## $WASM3\_ENV = _CLASS_->new()
+## $OBJ = _CLASS_->new()
 
-Instanties _CLASS_.
+Instantiates _CLASS_.
 Creates a new wasm3 environment and binds it to the returned object.
 
 ## $RUNTIME = _OBJ_->create\_runtime( $STACKSIZE )

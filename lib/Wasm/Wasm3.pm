@@ -107,9 +107,9 @@ Numeric constants that indicate the corresponding WebAssembly type.
 
 =head1 METHODS
 
-=head2 $WASM3_ENV = I<CLASS>->new()
+=head2 $OBJ = I<CLASS>->new()
 
-Instanties I<CLASS>.
+Instantiates I<CLASS>.
 Creates a new wasm3 environment and binds it to the returned object.
 
 =head2 $RUNTIME = I<OBJ>->create_runtime( $STACKSIZE )
