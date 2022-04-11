@@ -20,7 +20,7 @@ WriteMakefile(
         ],
       ) : ()
     ),
-    INC               => '-Wall',
+    INC               => '-Wall -std=c99',
     LICENSE           => "perl_5",
 
     OBJECT => join(
