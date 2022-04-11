@@ -82,7 +82,7 @@ use XSLoader;
 our $VERSION;
 
 BEGIN {
-    $VERSION = '0.01_03';
+    $VERSION = '0.01';
 
     XSLoader::load( __PACKAGE__, $VERSION );
 }
