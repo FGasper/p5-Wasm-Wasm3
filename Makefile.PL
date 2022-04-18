@@ -59,12 +59,16 @@ sub postamble {
         Alien::cmake3->exe(),
     );
 
+    my $dummy_app_dir = File::Spec->catdir('..', 'wasm3-dummy-app-dir');
+
     my @cmake_opts = (
         -D => 'BUILD_WASI=none',
 
         # _GNU_SOURCE is for Cygwin. It still fails to build,
         # but at least it’s a bit closer to success this way.
         -D => q/CMAKE_C_FLAGS='-fPIC -D_GNU_SOURCE'/,
+
+        -D => "APP_DIR='$dummy_app_dir'",
     );
 
     if ($^O eq 'MSWin32') {
