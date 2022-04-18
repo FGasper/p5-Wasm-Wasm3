@@ -172,7 +172,11 @@ jobs:
             packages: perl_base perl-ExtUtils-MakeMaker cmake git make gcc-g++ libcrypt-devel libnsl-devel bash
       - run: echo $(pwd)
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+      - run: echo $GITHUB_WORKSPACE
+        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
       - run: ls -laR .
+        shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+      - run: git config --global --add safe.directory $GITHUB_WORKSPACE\..
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
       - uses: actions/checkout@v3
         with:
