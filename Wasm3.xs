@@ -1,6 +1,7 @@
 #include "easyxs/easyxs.h"
 
 #include "wasm3/source/wasm3.h"
+#include "wasm3/source/m3_api_wasi.h"
 
 #include <stdint.h>
 #include <inttypes.h>

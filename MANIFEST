@@ -21,7 +21,10 @@ lib/Wasm/Wasm3/Module.pm
 lib/Wasm/Wasm3/Runtime.pm
 t/assets/perl_wasm_perl.wasm
 t/assets/perl_wasm_perl.wat
+t/assets/wasi-demo.ts
+t/assets/wasi-demo.wasm
 t/run.t
+t/wasi.t
 t/wasm_root.t
 wasm3/.codespellrc
 wasm3/CMakeLists.txt

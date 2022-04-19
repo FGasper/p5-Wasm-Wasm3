@@ -6,7 +6,7 @@ use ExtUtils::CBuilder;
 use File::Temp;
 use File::Spec;
 
-#my @defines = _determine_defines($basic_inc, $libs);
+my $uvwasi_inc = File::Spec->catdir( qw( wasm3 _deps uvwasi-src include ) );
 
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
@@ -20,13 +20,17 @@ WriteMakefile(
         ],
       ) : ()
     ),
-    INC               => '-Wall -std=c99',
+    INC               => "-I$uvwasi_inc -Wall -std=c99",
     LICENSE           => "perl_5",
+
+    DEFINE => '-Dd_m3HasUVWASI',
 
     OBJECT => join(
         q< >,
         '$(BASEEXT)$(OBJ_EXT)',
         File::Spec->catfile( qw(wasm3 source libm3.a) ),
+        File::Spec->catfile( qw(wasm3 _deps uvwasi-build libuvwasi_a.a) ),
+        File::Spec->catfile( qw(wasm3 _deps libuv-build libuv_a.a) ),
     ),
 
     PMLIBDIRS => ['lib'],
@@ -62,9 +66,8 @@ sub postamble {
     my @cmake_opts = (
         #-D => 'BUILD_WASI=none',
 
-        # _GNU_SOURCE is for Cygwin. It still fails to build,
-        # but at least it’s a bit closer to success this way.
-        -D => q/CMAKE_C_FLAGS='-fPIC -D_GNU_SOURCE'/,
+        # _XOPEN_SOURCE is for Cygwin to have ptsname():
+        -D => q/CMAKE_C_FLAGS='-fPIC -D_XOPEN_SOURCE=500'/,
 
         -D => "APP_DIR='../wasm3-dummy-app-dir'",
     );

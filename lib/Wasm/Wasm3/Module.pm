@@ -73,6 +73,11 @@ Space characters are ignored.
 For example: C<v(if)> indicates a function that takes i32 and f32 as
 arguments and returns nothing.
 
+=head2 $obj = I<OBJ>->link_wasi()
+
+A quick helper to link L<WASI|https://wasi.dev> includes via
+wasm3’s L<uvwasi|https://github.com/nodejs/uvwasi> integration.
+
 =cut
 
 1;

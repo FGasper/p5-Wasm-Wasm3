@@ -67,6 +67,10 @@ Wasmer et al. wasm3 only exports a single WebAssembly memory, for
 example. It can’t import memories or globals, and it neither imports
 I<nor> exports tables.
 
+=head1 L<WASI|https://wasi.dev> SUPPORT
+
+See L<Wasm::Wasm3::Module>.
+
 =head1 DOCUMENTATION
 
 This module generally documents only those aspects of its usage that
