@@ -49,6 +49,12 @@ typedef struct {
 #endif
 } ww3_runtime_userdata_s;
 
+#ifdef __CYGWIN__
+M3Result m3_Yield() {
+    return m3Err_none;
+}
+#endif
+
 static SV* _create_runtime (pTHX_ const char* classname, SV* stacksize_sv, SV* env_sv) {
     UV stacksize = exs_SvUV(stacksize_sv);
     if (stacksize > 0xffffffff) {

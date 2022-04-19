@@ -59,13 +59,25 @@ sub postamble {
         Alien::cmake3->exe(),
     );
 
-    # _GNU_SOURCE is for Cygwin. It still fails to build, but at least
-    # it’s a bit closer to success this way.
+    my @cmake_opts = (
+        -D => 'BUILD_WASI=none',
+
+        # _GNU_SOURCE is for Cygwin. It still fails to build,
+        # but at least it’s a bit closer to success this way.
+        -D => q/CMAKE_C_FLAGS='-fPIC -D_GNU_SOURCE'/,
+
+        -D => "APP_DIR='../wasm3-dummy-app-dir'",
+    );
+
+    if ($^O eq 'MSWin32') {
+        push @cmake_opts, -G => q<'MinGW Makefiles'>,
+    }
+
     return <<"MAKE_FRAG"
 
 .PHONY:
 build-wasm3:
-\t$cmake_path -D CMAKE_C_FLAGS='-fPIC -D_GNU_SOURCE' -S wasm3 -B wasm3
+\t$cmake_path @cmake_opts -S wasm3 -B wasm3
 \t\$(MAKE) -C wasm3
 MAKE_FRAG
 }

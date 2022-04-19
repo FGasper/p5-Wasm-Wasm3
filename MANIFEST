@@ -332,3 +332,4 @@ wasm3/test/wasi/wasmsynth/image.png
 wasm3/test/wasi/wasmsynth/shuffle-chill.wasm
 wasm3/test/wasi/wasmsynth/wasm-song.wasm
 wasm3/test/wasi/wasmsynth/webchip-music.wasm
+wasm3-dummy-app-dir/main.c
