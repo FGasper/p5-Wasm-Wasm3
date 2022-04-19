@@ -60,7 +60,7 @@ sub postamble {
     );
 
     my @cmake_opts = (
-        -D => 'BUILD_WASI=none',
+        #-D => 'BUILD_WASI=none',
 
         # _GNU_SOURCE is for Cygwin. It still fails to build,
         # but at least it’s a bit closer to success this way.

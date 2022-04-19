@@ -251,6 +251,19 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
     XSRETURN(count);                                   \
 } STMT_END
 
+void _link_wasi( pTHX_ SV* self_sv, int args_count, SV** args ) {
+    #ifndef d_m3HasUVWASI
+    croak("WASI requires libuv integration!");
+    #endif
+
+    ww3_module_s* module_sp = exs_structref_ptr(self_sv);
+
+    M3Result res = m3_LinkWASI(module_sp->module);
+    if (res) croak("%" SVf ": Failed to link WASI imports: %s", self_sv, res);
+
+    return;
+}
+
 /* ---------------------------------------------------------------------- */
 
 MODULE = Wasm::Wasm3        PACKAGE = Wasm::Wasm3
@@ -702,6 +715,15 @@ set_global (SV* self_sv, SV* name_sv, SV* value_sv)
         if (res) croak("%s", res);
 
         RETVAL = SvREFCNT_inc(self_sv);
+    OUTPUT:
+        RETVAL
+
+SV*
+link_wasi (SV* self_sv)
+    CODE:
+        _link_wasi(aTHX_ self_sv, items - 1, &ST(1));
+        RETVAL = SvREFCNT_inc(self_sv);
+
     OUTPUT:
         RETVAL
 
