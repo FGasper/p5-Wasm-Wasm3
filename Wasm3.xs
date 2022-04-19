@@ -49,6 +49,10 @@ typedef struct {
 #endif
 } ww3_runtime_userdata_s;
 
+/* m3_Yield() is a weak symbol on Cygwin but not on plain Windows.
+   Windows requires that weak symbols be resolved at compile time.
+   Thus there’s a distinct need for a dummy implementation here.
+*/
 #ifdef __CYGWIN__
 M3Result m3_Yield() {
     return m3Err_none;
