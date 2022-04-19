@@ -37,7 +37,7 @@ my $tfh = File::Temp::tempfile();
         open \*STDOUT, '>&', $dupe_stdout;
     } );
 
-    $mod->link_wasi();
+    $mod->link_wasi_default();
 
     $rt->call('_start');
 }

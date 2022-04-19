@@ -73,10 +73,36 @@ Space characters are ignored.
 For example: C<v(if)> indicates a function that takes i32 and f32 as
 arguments and returns nothing.
 
-=head2 $obj = I<OBJ>->link_wasi()
+=head2 $obj = I<OBJ>->link_wasi_default()
 
 A quick helper to link L<WASI|https://wasi.dev> includes via
 wasm3’s L<uvwasi|https://github.com/nodejs/uvwasi> integration.
+
+This uses wasm3’s built-in WASI defaults, e.g., STDIN becomes WASI file
+descriptor 0.
+
+=head2 $obj = I<OBJ>->link_wasi( %OPTS )
+
+Like C<link_wasi_default()> but takes a list of key/value pairs that
+offer the following controls:
+
+%OPTS are:
+
+=over
+
+=item * C<in>, C<out>, C<err> - File handles to the WASI input, output,
+and error streams. Defaults are file descriptors 0, 1, and 2 respectively.
+
+=item * C<argv> - A reference to an array of byte strings to pass
+as the WASI arguments.
+
+=item * C<env> - A reference to an array of key/value byte-string pairs
+to pass as the WASI environment.
+
+=item * C<preopen> - A reference to a hash of WASI paths to system/real
+paths. (Paths are byte strings.)
+
+=back
 
 =cut
 

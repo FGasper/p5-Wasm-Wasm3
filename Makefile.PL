@@ -8,7 +8,14 @@ use File::Spec;
 
 my $uvwasi_inc = File::Spec->catdir( qw( wasm3 _deps uvwasi-src include ) );
 
-my $need_lpthread = $^V lt v5.20.0;
+my %OS_CAN_WASI = map { $_ => 1 } (
+    'linux',
+    'darwin',
+    'freebsd',
+    'openbsd',
+);
+
+my $enable_wasi = $OS_CAN_WASI{$^O};
 
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
@@ -22,19 +29,37 @@ WriteMakefile(
         ],
       ) : ()
     ),
-    INC               => "-I$uvwasi_inc -Wall -std=c99",
-    LICENSE           => "perl_5",
+    LICENSE => "perl_5",
 
-    DEFINE => '-Dd_m3HasUVWASI',
+    INC => join(
+        q< >,
+        ( $enable_wasi ? "-I$uvwasi_inc" : () ),
+        '-Wall',
+        '-std=c99',
+    ),
 
-    ( $need_lpthread ? ( LIBS => '-lpthread' ) : () ),
+
+    (
+        $enable_wasi
+        ? (
+            DEFINE => '-Dd_m3HasUVWASI -DWW3_HAS_WASI',
+            LIBS => '-lpthread',
+        )
+        : ()
+    ),
 
     OBJECT => join(
         q< >,
         '$(BASEEXT)$(OBJ_EXT)',
         File::Spec->catfile( qw(wasm3 source libm3.a) ),
-        File::Spec->catfile( qw(wasm3 _deps uvwasi-build libuvwasi_a.a) ),
-        File::Spec->catfile( qw(wasm3 _deps libuv-build libuv_a.a) ),
+        (
+            $enable_wasi
+            ? (
+                File::Spec->catfile( qw(wasm3 _deps uvwasi-build libuvwasi_a.a) ),
+                File::Spec->catfile( qw(wasm3 _deps libuv-build libuv_a.a) ),
+            )
+            : (),
+        ),
     ),
 
     PMLIBDIRS => ['lib'],
@@ -68,9 +93,10 @@ sub postamble {
     );
 
     my @cmake_opts = (
-        #-D => 'BUILD_WASI=none',
+        ( $enable_wasi ? () : (-D => 'BUILD_WASI=none') ),
 
-        # _GNU_SOURCE is for Cygwin to have ptsname():
+        # _GNU_SOURCE is for Cygwin to have ptsname(), which doesn’t really
+        # matter for now since Cygwin can’t do WASI, but we might as well:
         -D => q/CMAKE_C_FLAGS='-fPIC -D_GNU_SOURCE'/,
 
         -D => "APP_DIR='../wasm3-dummy-app-dir'",

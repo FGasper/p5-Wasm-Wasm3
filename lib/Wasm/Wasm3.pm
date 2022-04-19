@@ -67,15 +67,6 @@ Wasmer et al. wasm3 only exports a single WebAssembly memory, for
 example. It can’t import memories or globals, and it neither imports
 I<nor> exports tables.
 
-=head1 L<WASI|https://wasi.dev> SUPPORT
-
-wasm3 includes two WASI implementations: a native one, and a wrapper around
-L<uvwasi|https://github.com/nodejs/uvwasi>. The native WASI is a singleton The latter requires, of course,
-L<libuv|https://libuv.org/>, which doesn’t support all platforms that
-this module targets.
-
-See L<Wasm::Wasm3::Module>.
-
 =head1 DOCUMENTATION
 
 This module generally documents only those aspects of its usage that
@@ -113,6 +104,11 @@ Returns wasm3’s version as a string.
 =head2 C<TYPE_I32>, C<TYPE_I64>, C<TYPE_F32>, C<TYPE_F64>
 
 Numeric constants that indicate the corresponding WebAssembly type.
+
+=head2 $YN = WASI_SUPPORTED
+
+Whether this Wasm::Wasm3 build supports wasm3’s L<WASI|https://wasi.dev>
+implementation. See L<Wasm::Wasm3::Module> for details.
 
 =head1 METHODS
 

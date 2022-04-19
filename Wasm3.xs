@@ -1,7 +1,10 @@
 #include "easyxs/easyxs.h"
 
 #include "wasm3/source/wasm3.h"
+
+#ifdef WW3_HAS_WASI
 #include "wasm3/source/m3_api_wasi.h"
+#endif
 
 #include <stdint.h>
 #include <inttypes.h>
@@ -252,17 +255,16 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
     XSRETURN(count);                                   \
 } STMT_END
 
-void _link_wasi( pTHX_ SV* self_sv, int args_count, SV** args ) {
-    #ifndef d_m3HasUVWASI
-    croak("WASI requires libuv integration!");
-    #endif
-
+void _link_wasi_default( pTHX_ SV* self_sv ) {
+#ifdef WW3_HAS_WASI
     ww3_module_s* module_sp = exs_structref_ptr(self_sv);
 
     M3Result res = m3_LinkWASI(module_sp->module);
     if (res) croak("%" SVf ": Failed to link WASI imports: %s", self_sv, res);
-
     return;
+#else
+    croak("This " PERL_NS " build lacks WASI support!");
+#endif
 }
 
 /* ---------------------------------------------------------------------- */
@@ -280,6 +282,13 @@ BOOT:
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "_M3_VERSION_REV", newSVuv(M3_VERSION_REV));
 
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "M3_VERSION_STRING", newSVpvs(M3_VERSION));
+    newCONSTSUB(gv_stashpv(PERL_NS, 0), "WASI_SUPPORTED", boolSV(
+#ifdef WW3_HAS_WASI
+    1
+#else
+    0
+#endif
+    ));
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_I32", newSVuv(c_m3Type_i32));
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_I64", newSVuv(c_m3Type_i64));
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "TYPE_F32", newSVuv(c_m3Type_f32));
@@ -720,9 +729,9 @@ set_global (SV* self_sv, SV* name_sv, SV* value_sv)
         RETVAL
 
 SV*
-link_wasi (SV* self_sv)
+link_wasi_default (SV* self_sv)
     CODE:
-        _link_wasi(aTHX_ self_sv, items - 1, &ST(1));
+        _link_wasi_default(aTHX_ self_sv);
         RETVAL = SvREFCNT_inc(self_sv);
 
     OUTPUT:
