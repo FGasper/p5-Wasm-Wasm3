@@ -165,15 +165,15 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      - uses: actions/checkout@v3.0.1
+        with:
+            submodules: recursive
       - name: Set up Cygwin
         uses: egor-tensin/setup-cygwin@v3
         with:
             platform: x64
             packages: perl_base perl-ExtUtils-MakeMaker cmake git make gcc-g++ libcrypt-devel libnsl-devel bash
       - run: git config --global --add safe.directory /cygdrive/d/a/p5-Wasm-Wasm3/p5-Wasm-Wasm3
-      - uses: actions/checkout@v3.0.1
-        with:
-            submodules: recursive
       - run: perl -V
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
       - run: cpan -T App::cpanminus
