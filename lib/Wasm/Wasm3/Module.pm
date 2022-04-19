@@ -83,6 +83,9 @@ descriptor 0.
 
 =head2 $obj = I<OBJ>->link_wasi( %OPTS )
 
+(NB: Only available if uvwasi is your WASI backend; see L<Wasm::Wasm3>
+for details.)
+
 Like C<link_wasi_default()> but takes a list of key/value pairs that
 offer the following controls:
 
@@ -105,5 +108,35 @@ paths. (Paths are byte strings.)
 =back
 
 =cut
+
+our $WASI_MODULE_STR;
+
+sub link_wasi_default {
+    my ($self) = @_;
+
+    if ($WASI_MODULE_STR) {
+        if ($WASI_MODULE_STR ne "$self") {
+            die "$self: WASI is already linked! ($WASI_MODULE_STR)";
+        }
+    }
+    else {
+        $self->_link_wasi_default();
+        $WASI_MODULE_STR = "$self";
+    }
+
+    return $self;
+}
+
+sub DESTROY {
+    my ($self) = @_;
+
+    $self->_destroy_xs();
+
+    if ($WASI_MODULE_STR && ($WASI_MODULE_STR eq "$self")) {
+        undef $WASI_MODULE_STR;
+    }
+
+    return;
+}
 
 1;

@@ -60,6 +60,24 @@ Wasmer et al. wasm3 only exports a single WebAssembly memory, for
 example. It can’t import memories or globals, and it neither imports
 _nor_ exports tables.
 
+# [WASI](https://wasi.dev) SUPPORT
+
+wasm3 implements WASI via either of (as of this writing) two backends:
+a wrapper around [uvwasi](https://github.com/nodejs/uvwasi), and a
+less-complete original implementation. The former needs
+[libuv](https://libuv.org), which doesn’t compile on all platforms,
+while the latter should compile everywhere this module can run.
+
+This distribution’s `Makefile.PL` implements logic to determine which
+backend to use.
+
+wasm3, as of this writing, implements both WASI backends as singletons;
+as a result, Wasm::Wasm3 allows only one module to use WASI at a time.
+
+You’re free, of course, to implement your own WASI imports rather than to
+use wasm3’s; depending on how much of WASI you actually need that may not
+be as onerous as it sounds.
+
 # DOCUMENTATION
 
 This module generally documents only those aspects of its usage that
@@ -80,10 +98,10 @@ Returns wasm3’s version as a string.
 
 Numeric constants that indicate the corresponding WebAssembly type.
 
-## $YN = WASI\_SUPPORTED
+## $YN = WASI\_BACKEND
 
-Whether this Wasm::Wasm3 build supports wasm3’s [WASI](https://wasi.dev)
-implementation. See [Wasm::Wasm3::Module](https://metacpan.org/pod/Wasm%3A%3AWasm3%3A%3AModule) for details.
+Either `uvwasi` or `simple`. See above about WASI support for
+details.
 
 # METHODS
 

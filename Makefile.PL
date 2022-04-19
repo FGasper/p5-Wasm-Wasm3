@@ -8,14 +8,14 @@ use File::Spec;
 
 my $uvwasi_inc = File::Spec->catdir( qw( wasm3 _deps uvwasi-src include ) );
 
-my %OS_CAN_WASI = map { $_ => 1 } (
+my %OS_CAN_UVWASI = map { $_ => 1 } (
     'linux',
     'darwin',
     'freebsd',
     'openbsd',
 );
 
-my $enable_wasi = $OS_CAN_WASI{$^O};
+my $use_uvwasi = $OS_CAN_UVWASI{$^O} || 0;
 
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
@@ -33,27 +33,24 @@ WriteMakefile(
 
     INC => join(
         q< >,
-        ( $enable_wasi ? "-I$uvwasi_inc" : () ),
+        ( $use_uvwasi ? "-I$uvwasi_inc" : () ),
         '-Wall',
         '-std=c99',
     ),
 
-
-    (
-        $enable_wasi
-        ? (
-            DEFINE => '-Dd_m3HasUVWASI -DWW3_HAS_WASI',
-            LIBS => '-lpthread',
-        )
-        : ()
+    DEFINE => join(
+        q< >,
+        "-DWW3_UVWASI=$use_uvwasi",
     ),
+
+    LIBS => ($use_uvwasi ? '-lpthread' : q<>),
 
     OBJECT => join(
         q< >,
         '$(BASEEXT)$(OBJ_EXT)',
         File::Spec->catfile( qw(wasm3 source libm3.a) ),
         (
-            $enable_wasi
+            $use_uvwasi
             ? (
                 File::Spec->catfile( qw(wasm3 _deps uvwasi-build libuvwasi_a.a) ),
                 File::Spec->catfile( qw(wasm3 _deps libuv-build libuv_a.a) ),
@@ -93,7 +90,7 @@ sub postamble {
     );
 
     my @cmake_opts = (
-        ( $enable_wasi ? () : (-D => 'BUILD_WASI=none') ),
+        ( $use_uvwasi ? () : (-D => 'BUILD_WASI=simple' ) ),
 
         # _GNU_SOURCE is for Cygwin to have ptsname(), which doesn’t really
         # matter for now since Cygwin can’t do WASI, but we might as well:

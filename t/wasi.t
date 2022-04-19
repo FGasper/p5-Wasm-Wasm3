@@ -6,11 +6,12 @@ use warnings;
 use Test::More;
 use Test::Deep;
 use Test::FailWarnings;
+
+use Wasm::Wasm3;
+
 use File::Spec;
 use File::Temp;
 use Scope::Guard;
-
-use Wasm::Wasm3;
 
 use File::Slurper;
 
