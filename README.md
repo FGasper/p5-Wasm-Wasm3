@@ -62,6 +62,11 @@ _nor_ exports tables.
 
 # [WASI](https://wasi.dev) SUPPORT
 
+wasm3 includes two WASI implementations: a native one, and a wrapper around
+[uvwasi](https://github.com/nodejs/uvwasi). The native WASI is a singleton The latter requires, of course,
+[libuv](https://libuv.org/), which doesn’t support all platforms that
+this module targets.
+
 See [Wasm::Wasm3::Module](https://metacpan.org/pod/Wasm%3A%3AWasm3%3A%3AModule).
 
 # DOCUMENTATION

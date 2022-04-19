@@ -69,6 +69,11 @@ I<nor> exports tables.
 
 =head1 L<WASI|https://wasi.dev> SUPPORT
 
+wasm3 includes two WASI implementations: a native one, and a wrapper around
+L<uvwasi|https://github.com/nodejs/uvwasi>. The native WASI is a singleton The latter requires, of course,
+L<libuv|https://libuv.org/>, which doesn’t support all platforms that
+this module targets.
+
 See L<Wasm::Wasm3::Module>.
 
 =head1 DOCUMENTATION

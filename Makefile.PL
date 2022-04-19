@@ -66,8 +66,8 @@ sub postamble {
     my @cmake_opts = (
         #-D => 'BUILD_WASI=none',
 
-        # _XOPEN_SOURCE is for Cygwin to have ptsname():
-        -D => q/CMAKE_C_FLAGS='-fPIC -D_XOPEN_SOURCE=500'/,
+        # _GNU_SOURCE is for Cygwin to have ptsname():
+        -D => q/CMAKE_C_FLAGS='-fPIC -D_GNU_SOURCE'/,
 
         -D => "APP_DIR='../wasm3-dummy-app-dir'",
     );
