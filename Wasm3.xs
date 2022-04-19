@@ -50,7 +50,7 @@ typedef struct {
 } ww3_runtime_userdata_s;
 
 #ifdef __CYGWIN__
-static M3Result m3_Yield() {
+M3Result m3_Yield() {
     return m3Err_none;
 }
 #endif
