@@ -44,11 +44,6 @@ typedef struct {
     SV** coderefs;
     unsigned coderefs_count;
 
-#ifdef MULTIPLICITY
-    pTHX;
-#endif
-} ww3_runtime_userdata_s;
-
 /* m3_Yield() is a weak symbol on Cygwin but not on plain Windows.
    Windows requires that weak symbols be resolved at compile time.
    Thus there’s a distinct need for a dummy implementation here.
@@ -58,6 +53,11 @@ M3Result m3_Yield() {
     return m3Err_none;
 }
 #endif
+
+#ifdef MULTIPLICITY
+    pTHX;
+#endif
+} ww3_runtime_userdata_s;
 
 static SV* _create_runtime (pTHX_ const char* classname, SV* stacksize_sv, SV* env_sv) {
     UV stacksize = exs_SvUV(stacksize_sv);
