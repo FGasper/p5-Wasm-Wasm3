@@ -8,6 +8,8 @@ use File::Spec;
 
 my $uvwasi_inc = File::Spec->catdir( qw( wasm3 _deps uvwasi-src include ) );
 
+my $need_lpthread = $^V lt v5.20.0;
+
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 WriteMakefile(
@@ -24,6 +26,8 @@ WriteMakefile(
     LICENSE           => "perl_5",
 
     DEFINE => '-Dd_m3HasUVWASI',
+
+    ( $need_lpthread ? ( LIBS => '-lpthread' ) : () ),
 
     OBJECT => join(
         q< >,
