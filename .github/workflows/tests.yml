@@ -170,6 +170,7 @@ jobs:
         with:
             platform: x64
             packages: perl_base perl-ExtUtils-MakeMaker cmake git make gcc-g++ libcrypt-devel libnsl-devel bash
+      - run: git config --global --add safe.directory /cygdrive/d/a/p5-Wasm-Wasm3/p5-Wasm-Wasm3
       - uses: actions/checkout@v3.0.1
         with:
             submodules: recursive
