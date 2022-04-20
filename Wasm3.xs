@@ -285,6 +285,14 @@ static inline void _croak_if_bogus_fd (int fd) {
     }
 }
 
+static inline unsigned _sv_to_fd_or_croak( pTHX_ SV* argval ) {
+    int fd = exs_SvUV(argval);
+    _croak_if_bogus_fd(fd);
+    int fd2 = dup(fd);
+    if (fd2 == -1) croak("dup(%d): %s", fd, strerror(errno));
+    return fd2;
+}
+
 void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
     ww3_module_s* module_sp = exs_structref_ptr(self_sv);
 
@@ -300,8 +308,10 @@ void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
     bool out_seen = false;
     bool err_seen = false;
     bool env_seen = false;
-    bool argv_seen = false;
-    //bool preopen_seen = false;
+    bool preopen_seen = false;
+
+    // Wasm3 kills it, though uvwasi supports it:
+    // bool argv_seen = false;
 
     for (int a=0; a<argslen; a += 2) {
         const char *argname = exs_SvPVbyte_nolen(args[a]);
@@ -311,22 +321,19 @@ void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
             if (in_seen) _croak_dupe_arg("in");
             in_seen = true;
 
-            init_options.in = exs_SvUV(argval);
-            _croak_if_bogus_fd(init_options.in);
+            init_options.in = _sv_to_fd_or_croak(aTHX_ argval);
         }
         else if (strEQ("out", argname)) {
             if (out_seen) _croak_dupe_arg("out");
             out_seen = true;
 
-            init_options.out = exs_SvUV(argval);
-            _croak_if_bogus_fd(init_options.out);
+            init_options.out = _sv_to_fd_or_croak(aTHX_ argval);
         }
         else if (strEQ("err", argname)) {
-            if (out_seen) _croak_dupe_arg("err");
+            if (err_seen) _croak_dupe_arg("err");
             err_seen = true;
 
-            init_options.err = exs_SvUV(argval);
-            _croak_if_bogus_fd(init_options.err);
+            init_options.err = _sv_to_fd_or_croak(aTHX_ argval);
         }
         else if (strEQ("env", argname)) {
             if (env_seen) _croak_dupe_arg("env");
@@ -341,17 +348,21 @@ void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
                 croak("%s: odd-length array given", "env");
             }
 
-            Newx(init_options.envp, 1 + avlen, const char*);
+            SSize_t envlen = avlen >> 1;
+
+            Newx(init_options.envp, 1 + envlen, const char*);
             SAVEFREEPV(init_options.envp);
 
-            init_options.envp[avlen] = NULL;
+            init_options.envp[envlen] = NULL;
 
             for (int e=0; e<avlen; e += 2) {
                 SV** name_svp = av_fetch(env_av, e, 0);
                 assert(name_svp);
+                assert(*name_svp);
 
                 SV** val_svp = av_fetch(env_av, 1 + e, 0);
                 assert(val_svp);
+                assert(*val_svp);
 
                 const char* name = exs_SvPVbyte_nolen(*name_svp);
                 const char* val = exs_SvPVbyte_nolen(*val_svp);
@@ -359,11 +370,44 @@ void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
                 unsigned namelen = strlen(name);
                 unsigned vallen = strlen(name);
 
-                Newx(init_options.envp[e >> 1], 1 + namelen + vallen, char);
-                SAVEFREEPV(init_options.envp[e >> 1]);
-                sprintf( (char*) init_options.envp[e >> 1], "%s=%s", name, val );
+                SSize_t env_idx = e >> 1;
+
+                Newx(init_options.envp[env_idx], 2 + namelen + vallen, char);
+                SAVEFREEPV(init_options.envp[env_idx]);
+                int out = sprintf( (char*) init_options.envp[env_idx], "%s=%s", name, val );
+                PERL_UNUSED_VAR(out);
+                assert(out == (1 + namelen + vallen));
             }
         }
+        else if (strEQ("preopen", argname)) {
+            if (preopen_seen) _croak_dupe_arg("preopen");
+            preopen_seen = true;
+
+            if (!SvROK(argval) || (SvTYPE(SvRV(argval)) != SVt_PVHV)) {
+                croak("“%s” must be a HASH reference, not %" SVf, "preopen", argval);
+            }
+
+            HV* hv = (HV*) SvRV(argval);
+
+            I32 size = hv_iterinit(hv);
+            init_options.preopenc = size;
+            Newx(init_options.preopens, size, uvwasi_preopen_t);
+            SAVEFREEPV(init_options.preopens);
+
+            for (I32 i=0; i<size; i++) {
+                HE* entry = hv_iternext(hv);
+                assert(entry);
+
+                SV* keysv = hv_iterkeysv(entry);
+                SV* valsv = hv_iterval(hv, entry);
+
+                init_options.preopens[i] = (uvwasi_preopen_t) {
+                    .mapped_path = exs_SvPVutf8_nolen(keysv),
+                    .real_path = exs_SvPVbyte_nolen(valsv),
+                };
+            }
+        }
+/*
         else if (strEQ("argv", argname)) {
             if (argv_seen) _croak_dupe_arg("argv");
             argv_seen = true;
@@ -380,10 +424,13 @@ void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
             for (int aa=0; aa<avlen; aa++) {
                 SV** arg_svp = av_fetch(argv_av, aa, 0);
                 assert(arg_svp);
+                assert(*arg_svp);
+sv_dump(*arg_svp);
 
                 init_options.argv[aa] = exs_SvPVbyte_nolen(*arg_svp);
             }
         }
+*/
         else {
             croak("Unknown: %s", argname);
         }
@@ -687,6 +734,17 @@ DESTROY (SV* self_sv)
 # ----------------------------------------------------------------------
 
 MODULE = Wasm::Wasm3        PACKAGE = Wasm::Wasm3::Module
+
+void
+run_start (SV* self_sv)
+    ALIAS:
+        compile = 1
+    CODE:
+        ww3_module_s* mod_sp = exs_structref_ptr(self_sv);
+        IM3Module mod = mod_sp->module;
+
+        M3Result res = ix ? m3_CompileModule(mod) : m3_RunStart(mod);
+        if (res) croak("%s", res);
 
 const char*
 get_name (SV* self_sv)

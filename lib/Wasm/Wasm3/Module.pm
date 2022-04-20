@@ -96,14 +96,23 @@ offer the following controls:
 =item * C<in>, C<out>, C<err> - File handles to the WASI input, output,
 and error streams. Defaults are file descriptors 0, 1, and 2 respectively.
 
-=item * C<argv> - A reference to an array of byte strings to pass
-as the WASI arguments.
-
 =item * C<env> - A reference to an array of key/value byte-string pairs
 to pass as the WASI environment.
 
 =item * C<preopen> - A reference to a hash of WASI paths to system/real
-paths. (Paths are byte strings.)
+paths.
+
+B<IMPORTANT:> WASI paths are character strings, while system paths are
+B<byte> strings. The discrepancy arises because WASI paths are always
+character strings, while Perl treats all system paths as byte strings
+(even on OSes like Windows where paths are character strings).
+
+So if, for example, you have directory F</tmp/føø> that you’ll access
+in WASI as F</épée>, your code might look thus:
+
+    preopen => {
+        do { use utf8; '/épée' } => do { no utf8; '/tmp/føø' },
+    },
 
 =back
 
@@ -114,13 +123,25 @@ our $WASI_MODULE_STR;
 sub link_wasi_default {
     my ($self) = @_;
 
+    return $self->_perl_link_wasi('_link_wasi_default');
+}
+
+sub link_wasi {
+    my ($self, @args) = @_;
+
+    return $self->_perl_link_wasi('_link_wasi', @args);
+}
+
+sub _perl_link_wasi {
+    my ($self, $fn, @args) = @_;
+
     if ($WASI_MODULE_STR) {
         if ($WASI_MODULE_STR ne "$self") {
             die "$self: WASI is already linked! ($WASI_MODULE_STR)";
         }
     }
     else {
-        $self->_link_wasi_default();
+        $self->$fn(@args);
         $WASI_MODULE_STR = "$self";
     }
 

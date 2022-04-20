@@ -5,3 +5,4 @@ test_requires 'File::Slurper';
 test_requires 'Test::Deep';
 test_requires 'Test::FailWarnings';
 test_requires 'Scope::Guard';
+test_requires 'autodie';
