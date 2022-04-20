@@ -41,6 +41,7 @@ WriteMakefile(
     DEFINE => join(
         q< >,
         "-DWW3_UVWASI=$use_uvwasi",
+        ($use_uvwasi ? '-Dd_m3HasUVWASI' : ()),
     ),
 
     LIBS => ($use_uvwasi ? '-lpthread' : q<>),
@@ -89,12 +90,17 @@ sub postamble {
         Alien::cmake3->exe(),
     );
 
+    my @cflags = (
+        '-fPIC',
+        ($^O eq 'cygwin' ? '-D__MINGW32__' : ()),
+    );
+
     my @cmake_opts = (
         ( $use_uvwasi ? () : (-D => 'BUILD_WASI=simple' ) ),
 
         # _GNU_SOURCE is for Cygwin to have ptsname(), which doesn’t really
         # matter for now since Cygwin can’t do WASI, but we might as well:
-        -D => q/CMAKE_C_FLAGS='-fPIC -D_GNU_SOURCE'/,
+        -D => qq/CMAKE_C_FLAGS='@cflags'/,
 
         -D => "APP_DIR='../wasm3-dummy-app-dir'",
     );

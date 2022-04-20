@@ -3,6 +3,10 @@
 #include "wasm3/source/wasm3.h"
 #include "wasm3/source/m3_api_wasi.h"
 
+#if WW3_UVWASI
+#include "uvwasi.h"
+#endif
+
 #include <stdint.h>
 #include <inttypes.h>
 #include <stdbool.h>
@@ -252,13 +256,145 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
     XSRETURN(count);                                   \
 } STMT_END
 
-void _link_wasi_default( pTHX_ SV* self_sv ) {
+#define _croak_if_wasi_failed(self_sv, res) \
+    if (res) croak("%" SVf ": Failed to link WASI imports: %s", self_sv, res);
+
+void _link_wasi_default ( pTHX_ SV* self_sv ) {
     ww3_module_s* module_sp = exs_structref_ptr(self_sv);
 
     M3Result res = m3_LinkWASI(module_sp->module);
-    if (res) croak("%" SVf ": Failed to link WASI imports: %s", self_sv, res);
+    _croak_if_wasi_failed(self_sv, res);
 
     return;
+}
+
+#define _croak_dupe_arg(name) \
+    croak(name " given multiple times!");
+
+#define _croak_if_not_avref(sv, name) STMT_START {      \
+    if (!SvROK(sv) || (SvTYPE(SvRV(sv)) != SVt_PVAV)) { \
+        croak("“%s” must be an ARRAY reference, not %" SVf, name, argval);  \
+    } \
+} STMT_END
+
+static inline void _croak_if_bogus_fd (int fd) {
+    int res = fcntl(fd, F_GETFD);
+    if (-1 == res) {
+        if (errno == EBADF) croak("Bad file descriptor given: %d\n", fd);
+        croak("FD %d check failed: %s", fd, strerror(errno));
+    }
+}
+
+void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
+    ww3_module_s* module_sp = exs_structref_ptr(self_sv);
+
+#if WW3_UVWASI
+    if (argslen % 2) {
+        croak("Uneven args list given!");
+    }
+
+    uvwasi_options_t init_options;
+    uvwasi_options_init(&init_options);
+
+    bool in_seen = false;
+    bool out_seen = false;
+    bool err_seen = false;
+    bool env_seen = false;
+    bool argv_seen = false;
+    //bool preopen_seen = false;
+
+    for (int a=0; a<argslen; a += 2) {
+        const char *argname = exs_SvPVbyte_nolen(args[a]);
+        SV* argval = args[1 + a];
+
+        if (strEQ("in", argname)) {
+            if (in_seen) _croak_dupe_arg("in");
+            in_seen = true;
+
+            init_options.in = exs_SvUV(argval);
+            _croak_if_bogus_fd(init_options.in);
+        }
+        else if (strEQ("out", argname)) {
+            if (out_seen) _croak_dupe_arg("out");
+            out_seen = true;
+
+            init_options.out = exs_SvUV(argval);
+            _croak_if_bogus_fd(init_options.out);
+        }
+        else if (strEQ("err", argname)) {
+            if (out_seen) _croak_dupe_arg("err");
+            err_seen = true;
+
+            init_options.err = exs_SvUV(argval);
+            _croak_if_bogus_fd(init_options.err);
+        }
+        else if (strEQ("env", argname)) {
+            if (env_seen) _croak_dupe_arg("env");
+            env_seen = true;
+
+            _croak_if_not_avref(argval, "env");
+
+            AV* env_av = (AV*) SvRV(argval);
+            SSize_t avlen = 1 + av_len(env_av);
+
+            if (avlen % 2) {
+                croak("%s: odd-length array given", "env");
+            }
+
+            Newx(init_options.envp, 1 + avlen, const char*);
+            SAVEFREEPV(init_options.envp);
+
+            init_options.envp[avlen] = NULL;
+
+            for (int e=0; e<avlen; e += 2) {
+                SV** name_svp = av_fetch(env_av, e, 0);
+                assert(name_svp);
+
+                SV** val_svp = av_fetch(env_av, 1 + e, 0);
+                assert(val_svp);
+
+                const char* name = exs_SvPVbyte_nolen(*name_svp);
+                const char* val = exs_SvPVbyte_nolen(*val_svp);
+
+                unsigned namelen = strlen(name);
+                unsigned vallen = strlen(name);
+
+                Newx(init_options.envp[e >> 1], 1 + namelen + vallen, char);
+                SAVEFREEPV(init_options.envp[e >> 1]);
+                sprintf( (char*) init_options.envp[e >> 1], "%s=%s", name, val );
+            }
+        }
+        else if (strEQ("argv", argname)) {
+            if (argv_seen) _croak_dupe_arg("argv");
+            argv_seen = true;
+
+            _croak_if_not_avref(argval, "argv");
+
+            AV* argv_av = (AV*) SvRV(argval);
+            SSize_t avlen = 1 + av_len(argv_av);
+
+            init_options.argc = avlen;
+            Newx(init_options.argv, avlen, const char*);
+            SAVEFREEPV(init_options.argv);
+
+            for (int aa=0; aa<avlen; aa++) {
+                SV** arg_svp = av_fetch(argv_av, aa, 0);
+                assert(arg_svp);
+
+                init_options.argv[aa] = exs_SvPVbyte_nolen(*arg_svp);
+            }
+        }
+        else {
+            croak("Unknown: %s", argname);
+        }
+    }
+
+    M3Result res = m3_LinkWASIWithOptions(module_sp->module, init_options);
+    _croak_if_wasi_failed(self_sv, res);
+
+#else
+    croak("Unimplemented in this " PERL_NS " build");
+#endif
 }
 
 /* ---------------------------------------------------------------------- */
@@ -277,7 +413,7 @@ BOOT:
 
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "M3_VERSION_STRING", newSVpvs(M3_VERSION));
     newCONSTSUB(gv_stashpv(PERL_NS, 0), "WASI_BACKEND", newSVpvs(
-#ifdef WW3_UVWASI
+#if WW3_UVWASI
     "uvwasi"
 #else
     "simple"
@@ -726,6 +862,11 @@ void
 _link_wasi_default (SV* self_sv)
     CODE:
         _link_wasi_default(aTHX_ self_sv);
+
+void
+_link_wasi (SV* self_sv, ...)
+    CODE:
+        _link_wasi(aTHX_ self_sv, items - 1, &ST(1));
 
 void
 _destroy_xs (SV* self_sv)
