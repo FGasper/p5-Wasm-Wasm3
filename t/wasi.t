@@ -66,7 +66,7 @@ open *STDIN, '<&', scalar File::Temp::tempfile();
 #----------------------------------------------------------------------
 
 SKIP: {
-    skip "Needs uvwasi", 1 if Wasm::Wasm3::WASI_BACKEND ne 'uvwasi';
+    skip "Needs uvwasi", 1 if $wasi_is_simple;
 
     my $mod = $wasm->parse_module($wasm_bin);
     my $rt = $wasm->create_runtime(102400)->load_module($mod);
@@ -85,7 +85,7 @@ SKIP: {
         open my $b, '>', "$dir/ü/é";
         open my $c, '>', "$dir/ü/ø";
     };
-    system('ls', '-la', $dir);
+    system('ls', '-laR', $dir);
 
     $mod->link_wasi(
         in => fileno($in),
