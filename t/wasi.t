@@ -61,7 +61,6 @@ open *STDIN, '<&', scalar File::Temp::tempfile();
     my $got = do { local $/; <$tfh> };
 
     like($got, qr<hello.+world>i, 'WASI ran');
-    like($got, qr<env.*WASM3_ARCH>, 'env');
 }
 
 #----------------------------------------------------------------------
