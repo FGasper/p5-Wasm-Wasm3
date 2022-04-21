@@ -312,8 +312,6 @@ void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
     bool env_seen = false;
     bool preopen_seen = false;
 
-    //AV* argv_av = NULL;
-
     for (int a=0; a<argslen; a += 2) {
         const char *argname = exs_SvPVbyte_nolen(args[a]);
         SV* argval = args[1 + a];
@@ -408,17 +406,6 @@ void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
                 };
             }
         }
-/*
-        else if (strEQ("argv", argname)) {
-            if (argv_seen) _croak_dupe_arg("argv");
-            argv_seen = true;
-
-            _croak_if_not_avref(argval, "argv");
-
-            argv_av = (AV*) SvRV(argval);
-
-        }
-*/
         else {
             croak("Unknown: %s", argname);
         }
@@ -426,28 +413,6 @@ void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
 
     M3Result res = m3_LinkModuleWASIWithOptions(module_sp->module, init_options);
     _croak_if_wasi_failed(self_sv, res);
-
-/*
-    if (argv_av) {
-        m3_wasi_context_t* m3_wasi = m3_GetModuleWasiContext(module_sp->module);
-        assert(m3_wasi);
-
-        SSize_t avlen = 1 + av_len(argv_av);
-
-        m3_wasi->argc = avlen;
-        Newx(m3_wasi->argv, avlen, const char*);
-        SAVEFREEPV(m3_wasi->argv);
-
-        for (int aa=0; aa<avlen; aa++) {
-            SV** arg_svp = av_fetch(argv_av, aa, 0);
-            assert(arg_svp);
-            assert(*arg_svp);
-sv_dump(*arg_svp);
-
-            m3_wasi->argv[aa] = exs_SvPVbyte_nolen(*arg_svp);
-        }
-    }
-*/
 
 #else
     croak("Unimplemented in this " PERL_NS " build");
