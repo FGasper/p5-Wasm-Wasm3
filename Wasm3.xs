@@ -15,6 +15,8 @@
 #define PERL_RT_CLASS (PERL_NS "::Runtime")
 #define PERL_MODULE_CLASS (PERL_NS "::Module")
 
+#define _WASI_FUNCNAME "_start"
+
 #define MAX_UINT32 0xffffffff
 #define MAX_MEMSIZE MAX_UINT32
 
@@ -262,7 +264,7 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
 void _link_wasi_default ( pTHX_ SV* self_sv ) {
     ww3_module_s* module_sp = exs_structref_ptr(self_sv);
 
-    M3Result res = m3_LinkWASI(module_sp->module);
+    M3Result res = m3_LinkModuleWASI(module_sp->module);
     _croak_if_wasi_failed(self_sv, res);
 
     return;
@@ -310,8 +312,7 @@ void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
     bool env_seen = false;
     bool preopen_seen = false;
 
-    // Wasm3 kills it, though uvwasi supports it:
-    // bool argv_seen = false;
+    //AV* argv_av = NULL;
 
     for (int a=0; a<argslen; a += 2) {
         const char *argname = exs_SvPVbyte_nolen(args[a]);
@@ -414,21 +415,8 @@ void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
 
             _croak_if_not_avref(argval, "argv");
 
-            AV* argv_av = (AV*) SvRV(argval);
-            SSize_t avlen = 1 + av_len(argv_av);
+            argv_av = (AV*) SvRV(argval);
 
-            init_options.argc = avlen;
-            Newx(init_options.argv, avlen, const char*);
-            SAVEFREEPV(init_options.argv);
-
-            for (int aa=0; aa<avlen; aa++) {
-                SV** arg_svp = av_fetch(argv_av, aa, 0);
-                assert(arg_svp);
-                assert(*arg_svp);
-sv_dump(*arg_svp);
-
-                init_options.argv[aa] = exs_SvPVbyte_nolen(*arg_svp);
-            }
         }
 */
         else {
@@ -436,8 +424,30 @@ sv_dump(*arg_svp);
         }
     }
 
-    M3Result res = m3_LinkWASIWithOptions(module_sp->module, init_options);
+    M3Result res = m3_LinkModuleWASIWithOptions(module_sp->module, init_options);
     _croak_if_wasi_failed(self_sv, res);
+
+/*
+    if (argv_av) {
+        m3_wasi_context_t* m3_wasi = m3_GetModuleWasiContext(module_sp->module);
+        assert(m3_wasi);
+
+        SSize_t avlen = 1 + av_len(argv_av);
+
+        m3_wasi->argc = avlen;
+        Newx(m3_wasi->argv, avlen, const char*);
+        SAVEFREEPV(m3_wasi->argv);
+
+        for (int aa=0; aa<avlen; aa++) {
+            SV** arg_svp = av_fetch(argv_av, aa, 0);
+            assert(arg_svp);
+            assert(*arg_svp);
+sv_dump(*arg_svp);
+
+            m3_wasi->argv[aa] = exs_SvPVbyte_nolen(*arg_svp);
+        }
+    }
+*/
 
 #else
     croak("Unimplemented in this " PERL_NS " build");
@@ -549,6 +559,33 @@ void
 get_function_returns (SV* self_sv, SV* name_sv)
     PPCODE:
         _function_sig_xsub(self_sv, name_sv, m3_GetRetCount, m3_GetRetType);
+
+void
+run_wasi (SV* self_sv, ...)
+    CODE:
+        ww3_runtime_s* rt_sp = exs_structref_ptr(self_sv);
+
+        IM3Function o_function;
+        M3Result res = m3_FindFunction( &o_function, rt_sp->rt, _WASI_FUNCNAME );
+        if (res) croak("Failed to find function %s: %s", _WASI_FUNCNAME, res);
+
+        IM3Module o_module = m3_GetFunctionModule(o_function);
+        assert(o_module);
+
+        m3_wasi_context_t* wasi = m3_GetModuleWasiContext(o_module);
+        if (!wasi) croak("No WASI context found on module “%s”!", m3_GetModuleName(o_module));
+
+        wasi->argc = items - 1;
+
+        const char* argv[wasi->argc];
+        wasi->argv = argv;
+
+        for (uint32_t a=0; a<wasi->argc; a++) {
+            argv[a] = exs_SvPVbyte_nolen(ST(1 + a));
+        }
+
+        res = m3_CallArgv( o_function, 0, NULL );
+        if (res) croak("WASI: %s", res);
 
 void
 call (SV* self_sv, SV* name_sv, ...)

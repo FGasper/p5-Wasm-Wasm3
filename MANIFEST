@@ -252,6 +252,7 @@ wasm3/source/m3_info.h
 wasm3/source/m3_math_utils.h
 wasm3/source/m3_module.c
 wasm3/source/m3_parse.c
+wasm3/source/m3_wasi.h
 wasm3/source/wasm3.h
 wasm3/source/wasm3_defs.h
 wasm3/test/fuzz/corpus/fib.c.wasm

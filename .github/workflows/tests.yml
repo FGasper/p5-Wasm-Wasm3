@@ -150,7 +150,7 @@ jobs:
           - i386
           - arm32v6
           - arm32v7
-        #  - s390x  # https://github.com/wasm3/wasm3/issues/321
+          - s390x  # https://github.com/wasm3/wasm3/issues/321
 
     steps:
       - uses: actions/checkout@main

@@ -24,8 +24,10 @@ my $wasm_bin = File::Slurper::read_binary(
     File::Spec->catfile($FindBin::Bin, qw(assets wasi-demo.wasm) ),
 );
 
+close *STDIN;
+open *STDIN, '<&', scalar File::Temp::tempfile();
+
 {
-last;
     my $mod = $wasm->parse_module($wasm_bin);
     my $rt = $wasm->create_runtime(102400)->load_module($mod);
 
@@ -43,7 +45,7 @@ last;
 
         $mod->link_wasi_default();
 
-        $rt->call('_start');
+        $rt->run_wasi();
     }
 
     sysseek $tfh, 0, 0;
@@ -81,8 +83,6 @@ SKIP: {
         out => fileno($out),
         err => fileno($err),
 
-        #argv => [qw( this is argv )],
-
         env => [
             THIS => 'is',
             ENV => 'wasm::wasm3',
@@ -93,7 +93,7 @@ SKIP: {
         },
     );
 
-    $rt->call('_start');
+    $rt->run_wasi(qw(this is ärgv));
 
     sysseek $out, 0, 0;
     my $got = do { local $/; <$out> };
@@ -101,10 +101,12 @@ SKIP: {
     like($got, qr<THIS.*is>, 'env 1');
     like($got, qr<ENV.*wasm::wasm3>, 'env 2');
     like($got, qr<épée.*abc.*é.*ø>, 'preopen & printout');
+    like($got, qr<this.*is.*ärgv>, 'argv given');
 
     sysseek $err, 0, 0;
     my $got2 = do { local $/; <$err> };
     like( $got2, qr<stdin.*this is stdin>, 'read from stdin, wrote to stderr' );
+diag $got;
 }
 
 done_testing();
