@@ -10,7 +10,10 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <stdbool.h>
+
+#ifdef HAS_FCNTL    // from Perl
 #include <fcntl.h>
+#endif
 
 #define PERL_NS "Wasm::Wasm3"
 #define PERL_RT_CLASS (PERL_NS "::Runtime")
@@ -281,11 +284,13 @@ void _link_wasi_default ( pTHX_ SV* self_sv ) {
 } STMT_END
 
 static inline void _croak_if_bogus_fd (int fd) {
+#ifdef HAS_FCNTL
     int res = fcntl(fd, F_GETFD);
     if (-1 == res) {
         if (errno == EBADF) croak("Bad file descriptor given: %d\n", fd);
         croak("FD %d check failed: %s", fd, strerror(errno));
     }
+#endif
 }
 
 static inline unsigned _sv_to_fd_or_croak( pTHX_ SV* argval ) {
