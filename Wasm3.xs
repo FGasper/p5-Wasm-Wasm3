@@ -373,7 +373,7 @@ void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
                 const char* val = exs_SvPVbyte_nolen(*val_svp);
 
                 unsigned namelen = strlen(name);
-                unsigned vallen = strlen(name);
+                unsigned vallen = strlen(val);
 
                 SSize_t env_idx = e >> 1;
 
