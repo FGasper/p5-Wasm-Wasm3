@@ -92,7 +92,6 @@ sub postamble {
 
     my @cflags = (
         '-fPIC',
-        ($^O eq 'cygwin' ? '-D__MINGW32__' : ()),
     );
 
     my @cmake_opts = (

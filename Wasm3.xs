@@ -60,16 +60,6 @@ typedef struct {
 #endif
 } ww3_runtime_userdata_s;
 
-/* m3_Yield() is a weak symbol on Cygwin but not on plain Windows.
-   Windows requires that weak symbols be resolved at compile time.
-   Thus there’s a distinct need for a dummy implementation here.
-*/
-#ifdef __CYGWIN__
-M3Result m3_Yield() {
-    return m3Err_none;
-}
-#endif
-
 static SV* _create_runtime (pTHX_ const char* classname, SV* stacksize_sv, SV* env_sv) {
     UV stacksize = exs_SvUV(stacksize_sv);
     if (stacksize > 0xffffffff) {
@@ -199,7 +189,7 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
 
     _wasm3_to_perl_svs(aTHX_ args_count, arg_types, _sp + rets_count, arg_svs);
 
-    SV* err;
+    SV* err = NULL;
 
     /* Perl auto-frees ret_svs. */
     SV** ret_svs = exs_call_sv_list_trapped(callback, arg_svs, &err);
@@ -230,6 +220,7 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
         }
     }
     else {
+        assert(err);
         warn_sv(err);
         errstr = "Perl callback threw exception";
     }
@@ -302,9 +293,9 @@ static inline unsigned _sv_to_fd_or_croak( pTHX_ SV* argval ) {
 }
 
 void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
+#if WW3_UVWASI
     ww3_module_s* module_sp = exs_structref_ptr(self_sv);
 
-#if WW3_UVWASI
     if (argslen % 2) {
         croak("Uneven args list given!");
     }
