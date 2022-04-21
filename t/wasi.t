@@ -18,6 +18,8 @@ use File::Slurper;
 
 use FindBin;
 
+my $wasi_is_simple = (Wasm::Wasm3::WASI_BACKEND ne 'uvwasi');
+
 my $wasm = Wasm::Wasm3->new();
 
 my $wasm_bin = File::Slurper::read_binary(
@@ -30,6 +32,10 @@ open *STDIN, '<&', scalar File::Temp::tempfile();
 {
     my $mod = $wasm->parse_module($wasm_bin);
     my $rt = $wasm->create_runtime(102400)->load_module($mod);
+
+    if ($wasi_is_simple) {
+        $mod->link_function('wasi_snapshot_preview1', 'fd_readdir', 'i(iiiIi)', sub { 0 } );
+    }
 
     my $tfh = File::Temp::tempfile();
 
@@ -55,6 +61,7 @@ open *STDIN, '<&', scalar File::Temp::tempfile();
     my $got = do { local $/; <$tfh> };
 
     like($got, qr<hello.+world>i, 'WASI ran');
+    like($got, qr<env.*WASM3_ARCH>, 'env');
 }
 
 #----------------------------------------------------------------------
@@ -79,6 +86,7 @@ SKIP: {
         open my $b, '>', "$dir/ü/é";
         open my $c, '>', "$dir/ü/ø";
     };
+    system('ls', '-la', $dir);
 
     $mod->link_wasi(
         in => fileno($in),
