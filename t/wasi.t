@@ -81,9 +81,9 @@ SKIP: {
     my $dir = File::Temp::tempdir( CLEANUP => 1 );
     mkdir "$dir/ü";
     do {
-        open my $a, '>', "$dir/ü/abc";
-        open my $b, '>', "$dir/ü/é";
-        open my $c, '>', "$dir/ü/ø";
+        for ( qw( abc é ää ø Ÿ ) ) {
+            open my $a, '>', "$dir/ü/$_";
+        }
     };
     system('ls', '-laR', $dir);
 
@@ -111,7 +111,7 @@ SKIP: {
     like($got, qr<hello.+world>i, 'WASI ran');
     like($got, qr<THIS.*is>, 'env 1');
     like($got, qr<ENV.*wasm::wasm3>, 'env 2');
-    like($got, qr<épée.*abc.*é.*ø>, 'preopen & printout');
+    like($got, qr<épée.*abc.*ää.*é.*ø.*Ÿ>, 'preopen & printout');
     like($got, qr<this.*is.*ärgv>, 'argv given');
 
     sysseek $err, 0, 0;
