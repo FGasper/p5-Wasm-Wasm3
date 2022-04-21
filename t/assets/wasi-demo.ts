@@ -29,4 +29,4 @@ else {
     Console.error(`from stdin: ${str}`);
 }
 
-process.exitCode = 42;
+process.exit(42);

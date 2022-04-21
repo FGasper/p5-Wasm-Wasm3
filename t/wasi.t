@@ -33,7 +33,7 @@ open *STDIN, '<&', scalar File::Temp::tempfile();
 
     my $tfh = File::Temp::tempfile();
 
-    {
+    my $exit_code = do {
         open my $dupe_stdout, '>&', \*STDOUT;
         close \*STDOUT;
         open \*STDOUT, '>&', $tfh;
@@ -46,7 +46,9 @@ open *STDIN, '<&', scalar File::Temp::tempfile();
         $mod->link_wasi_default();
 
         $rt->run_wasi();
-    }
+    };
+
+    is($exit_code, 42, 'WASI exit code returned');
 
     sysseek $tfh, 0, 0;
 
@@ -93,7 +95,9 @@ SKIP: {
         },
     );
 
-    $rt->run_wasi(qw(this is ärgv));
+    my $exit_code = $rt->run_wasi(qw(this is ärgv));
+
+    is($exit_code, 42, 'WASI exit code returned');
 
     sysseek $out, 0, 0;
     my $got = do { local $/; <$out> };
@@ -106,7 +110,6 @@ SKIP: {
     sysseek $err, 0, 0;
     my $got2 = do { local $/; <$err> };
     like( $got2, qr<stdin.*this is stdin>, 'read from stdin, wrote to stderr' );
-diag $got;
 }
 
 done_testing();

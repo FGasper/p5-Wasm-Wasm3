@@ -525,7 +525,7 @@ get_function_returns (SV* self_sv, SV* name_sv)
     PPCODE:
         _function_sig_xsub(self_sv, name_sv, m3_GetRetCount, m3_GetRetType);
 
-void
+int
 run_wasi (SV* self_sv, ...)
     CODE:
         ww3_runtime_s* rt_sp = exs_structref_ptr(self_sv);
@@ -550,7 +550,12 @@ run_wasi (SV* self_sv, ...)
         }
 
         res = m3_CallArgv( o_function, 0, NULL );
-        if (res) croak("WASI: %s", res);
+        if (res && res != m3Err_trapExit) croak("WASI: %s", res);
+
+        RETVAL = wasi->exit_code;
+
+    OUTPUT:
+        RETVAL
 
 void
 call (SV* self_sv, SV* name_sv, ...)

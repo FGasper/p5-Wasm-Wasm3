@@ -2,9 +2,10 @@ Revision history for Perl extension Wasm::Wasm3:
 
 0.02
 - Add WASI support.
-- Add Strawberry Perl compatibility.
 - Add Cygwin compatibility.
+- Add Strawberry Perl compatibility.
 - Update to latest wasm3.
+- Apply upstream wasm3 GitHub PRs: #322, #330, #331.
 
 0.01    Mon, 11 Apr 2022
 - Initial release
