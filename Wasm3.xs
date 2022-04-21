@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <stdbool.h>
+#include <fcntl.h>
 
 #define PERL_NS "Wasm::Wasm3"
 #define PERL_RT_CLASS (PERL_NS "::Runtime")
