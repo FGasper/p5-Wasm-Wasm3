@@ -161,7 +161,7 @@ jobs:
       - name: Get the qemu container
         run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
       - name: Run tests on ${{ matrix.platform }}
-        run: docker run --rm --interactive --mount type=bind,source=$(pwd),target=/host ${{ matrix.platform }}/alpine sh -c "apk add cmake perl perl-dev perl-app-cpanminus make gcc g++ libc-dev git; cp -r /host from-host; cd from-host; perl -V; cpanm --verbose --notest --installdeps --with-configure .; perl Makefile.PL; make; prove -wlvmb t"
+        run: docker run --rm --interactive --mount type=bind,source=$(pwd),target=/host ${{ matrix.platform }}/alpine sh -c "apk add cmake wget perl perl-dev perl-app-cpanminus make gcc g++ libc-dev git; cp -r /host from-host; cd from-host; perl -V; cpanm --verbose --notest --installdeps --with-configure .; perl Makefile.PL; make; prove -wlvmb t"
 
   cygwin:
     runs-on: windows-latest
