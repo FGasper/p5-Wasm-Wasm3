@@ -54,6 +54,30 @@ jobs:
       - name: Run Tests
         run: prove -wlvmb t
 
+  linux-centos7:
+    runs-on: ubuntu-latest
+
+    container:
+      image: centos:centos7
+
+    steps:
+
+      # CentOS 7’s git is too old for submodules.
+      - run: yum -y install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
+      - run: yum install -y git make cmake gcc curl perl-ExtUtils-MakeMaker
+      - uses: actions/checkout@main
+        with:
+            submodules: recursive
+      - run: perl -V
+      - name: Install Dependencies
+        run: curl https://cpanmin.us | perl - --notest --installdeps --with-configure --with-develop .
+      - name: perl Makefile.PL
+        run: perl Makefile.PL
+      - name: make
+        run: make
+      - name: Run Tests
+        run: prove -wlvmb t
+
   linux-specialperls:
     runs-on: ubuntu-latest
 
@@ -62,7 +86,7 @@ jobs:
       matrix:
         perl-version:
           - '5.020.003'
-          #- '5.022.004'    # no quadmath
+          - '5.022.004'    # no quadmath
           - '5.024.004'
           - '5.026.003'
           - '5.028.003'

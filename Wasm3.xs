@@ -56,7 +56,7 @@ typedef struct {
     unsigned coderefs_count;
 
 #ifdef MULTIPLICITY
-    pTHX;
+    tTHX aTHX;
 #endif
 } ww3_runtime_userdata_s;
 
