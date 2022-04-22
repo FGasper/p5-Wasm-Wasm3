@@ -77,7 +77,7 @@ backend to use.
 
 You’re free, of course, to implement your own WASI imports rather than to
 use wasm3’s. Depending on how much of WASI you actually need that may not
-be as onerous as it sounds; see the distribution’s `t/faux_wasi.t` for an
+be as onerous as it sounds; see the distribution’s `t/wasi_pp.t` for an
 example.
 
 # MEMORY LEAK DETECTION
@@ -87,7 +87,7 @@ if their `DESTROY()` method runs at global destruction time.
 
 This necessitates extra care when linking Perl functions to WASM;
 see [Wasm::Wasm3::Module](https://metacpan.org/pod/Wasm%3A%3AWasm3%3A%3AModule) for details, and the distribution’s
-`t/faux_wasi.t` for an example.
+`t/wasi_pp.t` for an example.
 
 # DOCUMENTATION
 

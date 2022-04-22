@@ -76,7 +76,7 @@ For example:
         },
     );
 
-The distribution’s F<t/faux_wasi.t> shows this technique in action.
+The distribution’s F<t/wasi_pp.t> shows this technique in action.
 
 (An alternative design would be to pass a special context object
 to every callback, but the weak-reference approach is more efficient.)

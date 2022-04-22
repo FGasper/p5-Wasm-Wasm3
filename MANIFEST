@@ -25,9 +25,9 @@ t/assets/perl_wasm_perl.wasm
 t/assets/perl_wasm_perl.wat
 t/assets/wasi-demo.ts
 t/assets/wasi-demo.wasm
-t/faux_wasi.t
 t/run.t
 t/wasi.t
+t/wasi_pp.t
 t/wasm_root.t
 wasm3/.codespellrc
 wasm3/CMakeLists.txt
