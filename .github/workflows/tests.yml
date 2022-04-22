@@ -69,6 +69,7 @@ jobs:
         with:
             submodules: recursive
       - run: perl -V
+      - run: curl https://cpanmin.us | perl - --verbose --notest Alien::cmake3
       - name: Install Dependencies
         run: curl https://cpanmin.us | perl - --verbose --notest --installdeps --with-configure --with-develop .
       - name: perl Makefile.PL
