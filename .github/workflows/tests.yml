@@ -151,8 +151,8 @@ jobs:
           - s390x  # https://github.com/wasm3/wasm3/issues/321
 
           # QEMU’s ARM emulation seems to fail with these:
-           - arm32v6
-           - arm32v7
+          - arm32v6
+          - arm32v7
 
     steps:
       - uses: actions/checkout@main
