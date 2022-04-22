@@ -17,6 +17,10 @@ Basic setup:
     my $module = $env->parse_module($wasm_binary);
     my $runtime = $env->create_runtime(1024)->load_module($module);
 
+Run L<WASI|https://wasi.dev>:
+
+    my $exit_code = $runtime->run_wasi('arg1', 'arg2');
+
 WebAssembly-exported globals:
 
     my $global = $module->get_global('some-value');
@@ -78,12 +82,19 @@ while the latter should compile everywhere this module can run.
 This distribution’s F<Makefile.PL> implements logic to determine which
 backend to use.
 
-wasm3, as of this writing, implements both WASI backends as singletons;
-as a result, Wasm::Wasm3 allows only one module to use WASI at a time.
-
 You’re free, of course, to implement your own WASI imports rather than to
-use wasm3’s; depending on how much of WASI you actually need that may not
-be as onerous as it sounds.
+use wasm3’s. Depending on how much of WASI you actually need that may not
+be as onerous as it sounds; see the distribution’s F<t/faux_wasi.t> for an
+example.
+
+=head1 MEMORY LEAK DETECTION
+
+To help you avoid memory leaks, instances of all classes C<warn()>
+if their C<DESTROY()> method runs at global destruction time.
+
+This necessitates extra care when linking Perl functions to WASM;
+see L<Wasm::Wasm3::Module> for details, and the distribution’s
+F<t/faux_wasi.t> for an example.
 
 =head1 DOCUMENTATION
 
@@ -100,7 +111,7 @@ use XSLoader;
 our $VERSION;
 
 BEGIN {
-    $VERSION = '0.01_90';
+    $VERSION = '0.01_91';
 
     XSLoader::load( __PACKAGE__, $VERSION );
 }

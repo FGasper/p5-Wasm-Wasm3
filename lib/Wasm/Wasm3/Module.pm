@@ -51,6 +51,36 @@ the number of arguments that $SIGNATURE indicates, or you’ll get an error
 If $CODEREF throws, the exception is C<warn()>ed, and a generic
 callback-failed error is thrown to the C<link_function()> caller.
 
+=head3 WASM Context in Callbacks
+
+Your callback may need to reference either the wasm3 runtime or module.
+When doing this, be sure to use a C<weaken()>ed copy (cf. L<Scalar::Util>)
+of that object, or you’ll leak memory (and eventually get a C<warn()>ing
+about it).
+
+For example:
+
+    my $weak_runtime = $runtime;
+    Scalar::Util::weaken($weak_runtime);
+
+    $module->link_function(
+        mymodule => myfuncname => 'v(ii)',
+        sub {
+            my ($buf_p, $buflen) = @_;
+
+            my $buf = $weak_runtime->get_memory($buf_p, $buflen);
+
+            # Now do something cool with $buf.
+
+            return;
+        },
+    );
+
+The distribution’s F<t/faux_wasi.t> shows this technique in action.
+
+(An alternative design would be to pass a special context object
+to every callback, but the weak-reference approach is more efficient.)
+
 =head3 $SIGNATURE
 
 $SIGNATURE is wasm3’s own convention to describe a function’s inputs &

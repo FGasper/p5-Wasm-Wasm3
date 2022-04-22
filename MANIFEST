@@ -19,10 +19,13 @@ lib/Wasm/Wasm3.pm
 lib/Wasm/Wasm3/Environment.pm
 lib/Wasm/Wasm3/Module.pm
 lib/Wasm/Wasm3/Runtime.pm
+t/assets/hello.ts
+t/assets/hello.wasm
 t/assets/perl_wasm_perl.wasm
 t/assets/perl_wasm_perl.wat
 t/assets/wasi-demo.ts
 t/assets/wasi-demo.wasm
+t/faux_wasi.t
 t/run.t
 t/wasi.t
 t/wasm_root.t
