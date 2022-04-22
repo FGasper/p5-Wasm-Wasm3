@@ -69,7 +69,7 @@ SKIP: {
     skip "Needs uvwasi", 1 if $wasi_is_simple;
 
     my $mod = $wasm->parse_module($wasm_bin);
-    my $rt = $wasm->create_runtime(102400)->load_module($mod);
+    my $rt = $wasm->create_runtime(10240000)->load_module($mod);
 
     my $in = File::Temp::tempfile();
     syswrite( $in, 'this is stdin' );
