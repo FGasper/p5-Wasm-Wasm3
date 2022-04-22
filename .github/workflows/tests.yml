@@ -64,11 +64,12 @@ jobs:
 
       # CentOS 7’s git is too old for submodules.
       - run: yum -y install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
-      - run: yum install -y git make cmake gcc curl perl-ExtUtils-MakeMaker
+      - run: yum install -y git make gcc curl perl-ExtUtils-MakeMaker
       - uses: actions/checkout@main
         with:
             submodules: recursive
       - run: perl -V
+      - run: cpan Alien::cmake3
       - name: Install Dependencies
         run: curl https://cpanmin.us | perl - --notest --installdeps --with-configure --with-develop .
       - name: perl Makefile.PL
