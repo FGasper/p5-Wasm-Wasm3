@@ -79,12 +79,12 @@ SKIP: {
     my $err = File::Temp::tempfile();
 
     my $dir = File::Temp::tempdir( CLEANUP => 1 );
-    mkdir "$dir/ü";
-    do {
-        for ( qw( abc é ää ø Ÿ ) ) {
-            open my $a, '>', "$dir/ü/$_";
-        }
-    };
+    my $preopen_host = "$dir/ü";
+    CORE::mkdir $preopen_host;
+
+    for ( qw( abc é ää ø Ÿ ) ) {
+        open my $a, '>', "$preopen_host/$_";
+    }
     system('ls', '-laR', $dir);
 
     $mod->link_wasi(
@@ -98,7 +98,7 @@ SKIP: {
         ],
 
         preopen => {
-            "/\x{e9}p\xe9e" => "$dir/ü",
+            "/\x{e9}p\x{e9}e" => $preopen_host,
         },
     );
 
