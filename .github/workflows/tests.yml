@@ -93,6 +93,7 @@ jobs:
           - '5.028.003'
           - '5.030.003'
           - '5.032.001'
+          - '5.034.000'
         perl-type:
           - 'main-longdouble-buster'
           - 'main-quadmath-buster'
