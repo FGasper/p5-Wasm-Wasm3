@@ -256,7 +256,7 @@ static const void* _call_perl (IM3Runtime runtime, IM3ImportContext _ctx, uint64
 #define _croak_if_wasi_failed(self_sv, res) \
     if (res) croak("%" SVf ": Failed to link WASI imports: %s", self_sv, res);
 
-void _link_wasi_default ( pTHX_ SV* self_sv ) {
+static void _link_wasi_default ( pTHX_ SV* self_sv ) {
     ww3_module_s* module_sp = exs_structref_ptr(self_sv);
 
     M3Result res = m3_LinkModuleWASI(module_sp->module);
@@ -292,7 +292,7 @@ static inline unsigned _sv_to_fd_or_croak( pTHX_ SV* argval ) {
     return fd2;
 }
 
-void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
+static void _link_wasi (pTHX_ SV* self_sv, int argslen, SV** args) {
 #if WW3_UVWASI
     ww3_module_s* module_sp = exs_structref_ptr(self_sv);
 
