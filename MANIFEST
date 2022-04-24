@@ -16,7 +16,6 @@ easyxs/easyxs_structref.h
 easyxs/init.h
 easyxs/ppport.h
 lib/Wasm/Wasm3.pm
-lib/Wasm/Wasm3/Environment.pm
 lib/Wasm/Wasm3/Module.pm
 lib/Wasm/Wasm3/Runtime.pm
 t/assets/hello.ts
