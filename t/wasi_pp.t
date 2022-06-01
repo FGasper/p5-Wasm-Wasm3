@@ -6,6 +6,9 @@ use autodie;
 
 # ----------------------------------------------------------------------
 # This test illustrates a minimal pure-Perl WASI implementation.
+#
+# To see how to implement other WASI calls, consult other WASI
+# implementations like uvwasi, Wasmer, wasm3’s own “simple” WASI, etc.
 # ----------------------------------------------------------------------
 
 use Test::More;
@@ -42,10 +45,16 @@ my $iovec_len = length pack $iovec_pack;
 
 $module->link_function(
     wasi_snapshot_preview1 => fd_write => 'i(iiii)',
+
+    # This fd_write implementation, instead of writing to a
+    # file descriptor, just captures the output.
+    #
     sub {
         my ($fd, $iovec_p, $iovs_len, $nwritten_p) = @_;
 
         warn "FD should be 1, not $fd??" if $fd != 1;
+
+        my $bytes_written = 0;
 
         for my $iov_offset (0 .. ($iovs_len-1)) {
             my ($buf_p, $buflen) = unpack( $iovec_pack, $weak_rt->get_memory( $iovec_p + ($iov_offset * $iovec_len), $iovec_len ) );
@@ -53,7 +62,17 @@ $module->link_function(
             my $output = $weak_rt->get_memory($buf_p, $buflen);
 
             $stdout .= $output;
+
+            $bytes_written += length $output;
         }
+
+        # AssemblyScript doesn’t actually seem to care about this,
+        # but we might as well.
+        #
+        $weak_rt->set_memory(
+            $nwritten_p,
+            pack( 'V', $bytes_written ),
+        );
 
         return 0;
     },
