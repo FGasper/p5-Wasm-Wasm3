@@ -1,6 +1,9 @@
 Revision history for Perl extension Wasm::Wasm3:
 
-0.02
+0.03
+- Update wasm3 from upstream.
+
+0.02    Sat, 18 Apr 2022
 - BUG FIX: Big-endian global i32 imports now work (via wasm3 PR #322).
 - Add WASI support (via wasm3 PR #331).
 - Add Cygwin compatibility (via wasm3 PR #330).
